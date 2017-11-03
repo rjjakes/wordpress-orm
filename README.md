@@ -1,5 +1,7 @@
 # Wordpress ORM
 
+*Under active development/non functional*
+
 A lightweight, Doctrine style ORM for Wordpress 4.8+. Requires PHP 5.5.9+
 
 This library borrows a lot of concepts from Doctrine for Symfony and applies them to Wordpress. Unlike Doctrine, this
