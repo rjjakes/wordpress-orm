@@ -1,0 +1,23 @@
+{
+  "name": "rjjakes/wordpress-orm",
+  "description": "Doctrine style ORM for Wordpress.",
+  "keywords": ["wordpress", "plugin", "orm", "doctrine", "composer", "sql"],
+  "homepage": "https://github.com/rjjakes/wordpress-orm",
+  "require": {
+    "php": ">=5.5.9",
+    "ramsey/uuid": "^3.7",
+    "minime/annotations": "^3.1"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ray Jakes",
+      "email": "symlinkdigital@gmail.com"
+    }
+  ],
+  "autoload" : {
+    "psr-4" : {
+      "Symlink\\ORM\\": "src/"
+    }
+  }
+}
