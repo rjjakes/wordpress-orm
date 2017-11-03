@@ -34,7 +34,7 @@ composer require rjjakes/wordpress-orm
 To use the ORM, first create a pure class that extends the ORM base model and add a number of properties as protected
 variables like so:
 
-```
+```php
 <?php
 
 namespace App\Models;
@@ -95,7 +95,9 @@ wp_posts), this should be set to False to avoid corrupting that table.
 **The property definitions are as follows:**
 
 `ORM_Column_Type` The MySQL column type.
+
 `ORM_Column_Length` The MySQL column length.
+
 `ORM_Column_Null` The MySQL column NULl setting. (The only valid option here is 'NOT NULL'). For NULL, just omit this
 annotation. 
 
@@ -106,7 +108,7 @@ Once you have a model object, you need to tell Wordpress to create a table to ma
 
 Use the mapper class:
 
-```
+```php
 use Symlink\ORM\Mapping;
 ```
 
@@ -114,13 +116,13 @@ First, get an instance of the ORM mapper object. This static function below make
 per request. Any subsequent calls to `::getMapper()` will return the same object. This means you don't need to
 continually create a new instance of Mapper() and parse the annotation.     
 
-```
+```php
 $mapper = Mapping::getMapper();
 ```
 
 Now update the database schema for this class as follows: 
 
-```
+```php
 $mapper->updateSchema(Product::class);
 ```
 
@@ -134,13 +136,13 @@ made a change to your model schema and want to apply it to the database
 
 Use the ORM manager: 
 
-```
+```php
 use Symlink\ORM\Manager;
 ```
 
 Create a new instance of your model:
 
-```
+```php
 $campaign = new Product();
 $campaign->set('title', 'Some title');
 $campaign->set('time', '2017-11-03 10:04:02');
@@ -151,7 +153,7 @@ $campaign->set('short_name', 'something_here');
 Get an instance of the ORM manager class. Like the Mapping class, this static function returns
 a reusable instance of the manager class. 
 
-```
+```php
 $orm = Manager::getManager();
 ```
 
@@ -161,14 +163,14 @@ ready to apply them, the ORM will combine these changes into as few queries as p
 
 This function uses the internal Wordpress `$wpdb->prepare()` function to protect against SQL injection attacks. 
 
-```
+```php
 $orm->persist($campaign);
 ```
 
 Once, you're ready to apply all changes to your database (syncing what you have persisted to the database), call
 flush():
 
-```
+```php
 $orm->flush();
 ```
 
@@ -182,7 +184,7 @@ x
 
 Wordpress ORM comes built in with several models that map to default Wordpress tables.
 
-```
+```php
 Symlink\Models\Post
 Symlink\Models\Page
 Symlink\Models\User
