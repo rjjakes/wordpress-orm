@@ -149,9 +149,9 @@ class Mapping {
             }
 
             // Add the schema to the mapper array for this class.
-            $placeholder_values_type = '%s';
+            $placeholder_values_type = '%s';  // Initially assume column is string type.
 
-            if (in_array($column_type, [
+            if (in_array($column_type, [  // If the column is a decimal type.
               'tinyint',
               'smallint',
               'bigint',
@@ -159,7 +159,7 @@ class Mapping {
               $placeholder_values_type = '%d';
             }
 
-            if (in_array($column_type, [
+            if (in_array($column_type, [  // If the column is a float type.
               'float',
             ])) {
               $placeholder_values_type = '%f';
@@ -179,12 +179,15 @@ class Mapping {
     return $this->models[$classname];
   }
 
+
   /**
    * Compares a database table schema to the model schema (as defined in the
    * annotations). If there any differences, the database schema is modified
    * to match the model.
-   *
+
    * @param $classname
+   *
+   * @return bool|\WP_Error
    */
   public function updateSchema($classname) {
     global $wpdb;
@@ -199,7 +202,7 @@ class Mapping {
 
     // Create an ID type string.
     $id_type = 'id';
-    $id_type_string = 'id  mediumint(9) NOT NULL AUTO_INCREMENT';
+    $id_type_string = 'id mediumint(9) NOT NULL AUTO_INCREMENT';
 
     // Build the SQL CREATE TABLE command for use with dbDelta.
     $charset_collate = $wpdb->get_charset_collate();
@@ -216,7 +219,8 @@ class Mapping {
     // Use dbDelta to do all the hard work.
     require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
     dbDelta($sql);
-  }
 
+    return TRUE;
+  }
 
 }

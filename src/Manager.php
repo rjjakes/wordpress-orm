@@ -39,7 +39,7 @@ class Manager {
    * Changes to this model should be applied when flush() is called.
    * @param $model
    */
-  public function persist(\Symlink\ORM\BaseModel $model) {
+  public function persist(BaseModel $model) {
 
     // If the model doesn't have an ID it is new, so CREATE.
     if (!$model->getId()) {
@@ -63,7 +63,7 @@ class Manager {
    * This model should be removed from the db when flush() is called.
    * @param $model
    */
-  public function remove(\Symlink\ORM\BaseModel$model) {
+  public function remove(BaseModel $model) {
 
     // Add/overwrite the DELETE entry.
     $this->changes[$model->getUUID()] = [

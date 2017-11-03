@@ -5,19 +5,16 @@
 A lightweight, Doctrine style ORM for Wordpress 4.8+. Requires PHP 5.5.9+
 
 This library borrows a lot of concepts from Doctrine for Symfony and applies them to Wordpress. Unlike Doctrine, this
-library has VERY limited capabilities.
-You can persist models to the db, modify the db schema based on the Model class, remove rows from the db and perform
-some queries.
+library has limited capabilities.
 
-That's pretty much it. 
-
+It acts as a layer sitting on top of the internal Wordpress `$wpdb` class. 
 
 ## Why?
 
-I came to Wordpress from a Symfony development background. I looked around for a good ORM and was unable to find
-anything that fullfilled my requirements. 
+I came to Wordpress from a Symfony development background. I wanted to work with objects instead of manually writing
+SQL queries. I looked around for a good ORM and was unable to find anything that fulfilled my requirements. 
 
-Using Doctrine in Wordpress was complex and seemed like overkill as it's a very heavy weight library. 
+Getting Doctrine to qork with Wordpress was complex and seemed like overkill as it's a very heavy weight library. 
 
 There's also: https://github.com/tareq1988/wp-eloquent which is really good, but is more of a query builder for
 existing Wordpress tables.
@@ -100,7 +97,7 @@ wp_posts), this should be set to False to avoid corrupting that table.
 
 `ORM_Column_Length` The MySQL column length.
 
-`ORM_Column_Null` The MySQL column NULl setting. (The only valid option here is 'NOT NULL'). For NULL, just omit this
+`ORM_Column_Null` The MySQL column NULL setting. (The only valid option here is 'NOT NULL'). For NULL, just omit this
 annotation. 
 
 
@@ -186,7 +183,7 @@ Now check your database and you'll see a new row containing your model data.
 
 @todo
 
-### Deleting objects from the datatbase
+### Deleting objects from the database
 
 @todo
 
@@ -200,3 +197,14 @@ Wordpress ORM comes built in with several models that map to default Wordpress t
 Symlink\Models\Post
 Symlink\Models\User
 ```
+
+## Dependencies 
+
+(Dependencies are automatically handled by Composer). 
+
+https://github.com/marcioAlmada/annotations
+https://github.com/ramsey/uuid
+
+## Credits
+
+Maintained by: https://github.com/rjjakes
