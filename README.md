@@ -180,14 +180,23 @@ Now check your database and you'll see a new row containing your model data.
 
 ### Querying the database
 
-x
+@todo
+
+### Saving modified objects back to the database
+
+@todo
+
+### Deleting objects from the datatbase
+
+@todo
 
 ## Pre-defined models
+
+@todo
 
 Wordpress ORM comes built in with several models that map to default Wordpress tables.
 
 ```php
 Symlink\Models\Post
-Symlink\Models\Page
 Symlink\Models\User
 ```
