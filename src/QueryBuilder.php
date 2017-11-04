@@ -8,9 +8,15 @@ class QueryBuilder {
 
   private $where;
 
-  private $orderBy;
+  private $order_by;
 
   private $limit;
+
+  /**
+   * The prepared query run through $wpdb->prepare().
+   * @var
+   */
+  private $query;
 
   /**
    * Reference to the repository.
@@ -19,25 +25,16 @@ class QueryBuilder {
   private $repository;
 
   /**
-   * Valid properties (including the required 'id' field).
-   * @var array
-   */
-  private $valid_properties;
-
-  /**
    * QueryBuilder constructor.
    */
   public function __construct(BaseRepository $repository) {
     // Set some default values.
     $this->where = [];
-    $this->orderBy = '';
-    $this->limit = '';
+    $this->order_by;
+    $this->limit;
 
     // And store the sent repository.
     $this->repository = $repository;
-
-    // And the valid properties.
-    $this->valid_properties = array_merge($this->repository->getObjectProperties(), ['id']);
   }
 
   /**
@@ -54,7 +51,7 @@ class QueryBuilder {
   public function where($property, $value, $operator) {
 
     // Check the property exists.
-    if (!in_array($property, $this->valid_properties)) {
+    if (!in_array($property, $this->repository->getObjectProperties())) {
       throw new \Symlink\ORM\Exceptions\PropertyDoesNotExistException(sprintf(__('Property %s does not exist in model %s.'), $property, $this->repository->getObjectClass()));
     }
 
@@ -66,20 +63,19 @@ class QueryBuilder {
       '!=',
       '>',
       '>=',
-      'IN'
+      'IN',
+      'NOT IN'
       ])) {
       throw new \Symlink\ORM\Exceptions\InvalidOperatorException(sprintf(__('Operator %s is not valid.'), $operator));
     }
 
-    echo "HERE\n\n";
-    print_r($this->repository->getObjectClass());
-    echo "\n\n";
-    print_r($this->repository->getObjectProperties());
-    echo "\n\n";
-
-    print "where";
-    print_r($this);
-    exit;
+    // Add the entry.
+    $this->where[] = [
+      'property' => $property,
+      'operator' => $operator,
+      'value' => $value,
+      'placeholder' => $this->repository->getObjectPropertyPlaceholders()[$property]
+      ];
 
     return $this;
   }
@@ -96,7 +92,7 @@ class QueryBuilder {
    */
   public function orderBy($property, $operator) {
     // Check the property exists.
-    if (!in_array($property, $this->valid_properties)) {
+    if (!in_array($property, $this->repository->getObjectProperties())) {
       throw new \Symlink\ORM\Exceptions\PropertyDoesNotExistException(sprintf(__('Property %s does not exist in model %s.'), $property, $this->repository->getObjectClass()));
     }
 
@@ -108,26 +104,136 @@ class QueryBuilder {
       throw new \Symlink\ORM\Exceptions\InvalidOperatorException(sprintf(__('Operator %s is not valid.'), $operator));
     }
 
+    // Save it
+    $this->order_by = "ORDER BY " . $property . " " . $operator . "
+    ";
+
     return $this;
   }
 
   /**
    * Set the limit clause.
    *
-   * @param $start
    * @param $count
+   * @param int $offset
+   *
+   * @return $this
    */
-  public function limit($start, $count) {
+  public function limit($count, $offset = 0) {
+    // Ignore if not valid.
+    if (is_numeric($offset) && is_numeric($count) && $offset >= 0 && $count > 0) {
+      $this->limit = "LIMIT " . $count . " OFFSET " . $offset . "
+      ";
+    }
+
     return $this;
   }
 
   /**
-   * Build the query into something Wordpress can process.
+   * Build the query and process through $wpdb->prepare().
+   * @return $this
    */
   public function buildQuery() {
+    global $wpdb;
+
+    $values = [];
+
+    $sql = "SELECT * FROM " . $wpdb->prefix . $this->repository->getDBTable() . "
+    ";
+
+    // Combine the WHERE clauses and add to the SQL statement.
+    if (count($this->where))  {
+      $sql .= "WHERE
+      ";
+
+      $combined_where = [];
+      foreach ($this->where as $where) {
+
+        // Operators is not "IN" or "NOT IN"
+        if ($where['operator'] != 'IN' && $where['operator'] != 'NOT IN') {
+          $combined_where[] = $where['property'] . " " . $where['operator'] . " " . $where['placeholder'] . "
+          ";
+          $values[] = $where['value'];
+        }
+        // Operator is "IN" or "NOT IN"
+        else {
+          // Fail silently.
+          if (is_array($where['value'])) {
+            $combined_where[] = $where['property'] . " " . $where['operator'] . " (" . implode(", ", array_pad([], count($where['value']),  $where['placeholder'])) . ")
+          ";
+
+            $values = array_merge($values, $where['value']);
+          }
+        }
+      }
+
+      $sql .= implode(' AND ', $combined_where);  // @todo - should allow more than AND in future.
+    }
+
+    // Add the ORDER BY clause.
+    if ($this->order_by) {
+      $sql .= $this->order_by;
+    }
+
+    // Add the LIMIT clause.
+    if ($this->limit) {
+      $sql .= $this->limit;
+    }
+
+    // Save it.
+    $this->query = $wpdb->prepare($sql, $values);
+
     return $this;
   }
 
-  public function getResult() {
+  /**
+   * Run the query returning either a single object or an array of objects.
+   *
+   * @param bool $always_array
+   *
+   * @return array|bool|mixed
+   * @throws \Symlink\ORM\Exceptions\NoQueryException
+   */
+  public function getResults($always_array = FALSE) {
+    global $wpdb;
+
+    if ($this->query) {
+
+      // Get the results from the db.
+      if ($results = $wpdb->get_results($this->query)) {
+
+        // Build the array of objects.
+        $objects = [];
+        $object_classname = $this->repository->getObjectClass();
+
+        foreach ($results as $result) {
+          // Create a new blank object.
+          $object = new $object_classname();
+
+          // Fill in all the properties.
+          array_walk($result, function ($value, $property) use (&$object) {
+            $object->set($property, $value);
+          });
+
+          // Save it.
+          $objects[] = $object;
+        }
+
+        // Return just an object if there was only one result.
+        if (count($objects) == 1 && !$always_array) {
+          return $objects[0];
+        }
+
+        // Otherwise, the return an array of objects.
+        return $objects;
+      }
+      else {
+        // If there were no results.
+        return FALSE;
+      }
+    }
+    else {
+      throw new \Symlink\ORM\Exceptions\NoQueryException(__('No query was built. Run ->buildQuery() first.'));
+    }
   }
 }

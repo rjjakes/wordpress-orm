@@ -51,29 +51,44 @@ class BaseRepository {
   }
 
   /**
+   * Getter used in the query builder
+   * @return mixed
+   */
+  public function getDBTable() {
+    return $this->annotations['ORM_Table'];
+  }
+
+  /**
    * Getter used in the query builder.
    * @return array
    */
   public function getObjectProperties() {
-    return array_keys($this->annotations['schema']);
+    return array_merge(
+      ['id'],
+      array_keys($this->annotations['schema'])
+    );
   }
 
   /**
-   * Find a single record by ID.
+   * Getter used in the query builder.
+   * @return array
+   */
+  public function getObjectPropertyPlaceholders() {
+    return array_merge(
+      ['id' => '%d'],
+      $this->annotations['placeholder']
+    );
+  }
+
+  /**
+   * Find a single object by ID.
    * @param $id
    */
   public function find($id) {
   }
 
   /**
-   * Find a single record by UUID.
-   * @param $uuid
-   */
-  public function findByUUID($uuid) {
-  }
-
-  /**
-   * Return all records in the table.
+   * Return all objects of this type.
    * @return array
    */
   public function findAll() {
@@ -81,11 +96,14 @@ class BaseRepository {
   }
 
   /**
-   * Returns all records with matching column value.
-   * @param $column
+   * Returns all objects with matching property value.
+   *
+   * @param $property
+   * @param $value
+   *
    * @return array
    */
-  public function findBy($column) {
+  public function findBy($property, $value) {
     return [];
   }
 

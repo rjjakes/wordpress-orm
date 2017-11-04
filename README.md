@@ -1,4 +1,4 @@
-# Wordpress ORM
+# WORM (Wordpress ORM)
 
 *Under active development/non functional*
 
@@ -8,6 +8,9 @@ This library borrows a lot of concepts from Doctrine for Symfony including the m
 one-to-many entity relationships and a query builder.  
 
 It acts as a layer sitting on top of the internal Wordpress `$wpdb` class. 
+
+All queries are run through the internal Wordpress `$wpdb->prepare()` function to protect against SQL injection
+attacks. 
 
 ## Why?
 
@@ -95,7 +98,7 @@ want to set this field to: False.
 For your custom models, you want to set this to True. When mapping models to existing Wordpress tables (such as
 wp_posts), this should be set to False to avoid corrupting that table.      
 
-**The property definitions are as follows:**
+**The property annotations are as follows:**
 
 `ORM_Column_Type` The MySQL column type.
 
@@ -117,7 +120,7 @@ use Symlink\ORM\Mapping;
 
 First, get an instance of the ORM mapper object. This static function below makes sure `new Mapping()` is called once
 per request. Any subsequent calls to `::getMapper()` will return the same object. This means you don't need to
-continually create a new instance of Mapper() and parse the annotation.     
+continually create a new instance of Mapper() and parse the annotations.     
 
 ```php
 $mapper = Mapping::getMapper();
@@ -162,9 +165,8 @@ $orm = Manager::getManager();
 
 Now queue up these changes to apply to the database. Calling this does NOT immediately apply the changes to the
 database. The idea here is the same as Doctrine: you can queue up many different changes to happen and once you're
-ready to apply them, the ORM will combine these changes into as few queries as possible. 
-
-This function uses the internal Wordpress `$wpdb->prepare()` function to protect against SQL injection attacks. 
+ready to apply them, the ORM will combine these changes into single SQL queries where possible. This helps reduce the 
+number of calls made to the database. 
 
 ```php
 $orm->persist($campaign);
@@ -181,7 +183,88 @@ Now check your database and you'll see a new row containing your model data.
 
 ### Querying the database
 
+Use the ORM manager: 
+
+```php
+use Symlink\ORM\Manager;
+```
+
+Get an instance of the ORM manager class. 
+
+```php
+$orm = Manager::getManager();
+```
+
+Get the object repository. Repositories are classes that are specific to certain object types. They contain functions
+for querying specific object types. 
+
+By default all object types have a base repository which you can get access to by passing in the object type as follows:
+
+```php
+$repository = $orm->getRepository(Product::class);
+```
+
+**With the query builder**
+
+You can create a query though this repository like so:
+
+```php
+$query = $repository->createQueryBuilder()
+  ->where('id', 3, '=')
+  ->orderBy('id', 'ASC')
+  ->limit(1)
+  ->buildQuery();
+```
+
+Available where() operators are: 
+
+```php
+'<', '<=', '=', '!=', '>', '>=', 'IN', 'NOT IN'
+```
+
+Available orderBy() operators are: 
+
+```php
+'ASC' 'DESC'
+```
+
+To use the "IN" and "NOT IN" clauses of the ->where() function, pass in an array of values like so:
+
+```php
+$query = $repository->createQueryBuilder()
+  ->where('id', [1, 12], 'NOT IN')
+  ->orderBy('id', 'ASC')
+  ->limit(1)
+  ->buildQuery();
+```
+
+Now you have your query, you can use it to get some objects back out of the database.
+
+```php
+$results = $query->getResults();
+```
+
+Note that if there was just one result, `$results` will contain an object of the repository type. Otherwise it will
+contain an array of objects. 
+ 
+To force `getResults()` to always return an array (even if it's just one results), call it with `TRUE` like this:  
+
+```php
+$results = $query->getResults(TRUE);
+```
+
+**Built-in repository query functions**
+
+Building a query every time you want to select objects from the database is not best practice. Ideally you would create
+some helper functions that abstract the query builder away from your controller. 
+ 
+There are several built-in functions to the base repository that are available like this:
+
 @todo
+ 
+To add more repository query functions, you can subclass the `BaseRepository` class and tell your object to use that
+instead of `BaseRepository`. That is covered in the section below called: *Create a custom repository*   
+
 
 ### Saving modified objects back to the database
 
@@ -238,7 +321,7 @@ FailedToInsertException
 
 @todo
 
-Wordpress ORM comes built in with several models that map to default Wordpress tables.
+Wordpress ORM comes with some built-in models that map to default Wordpress tables. 
 
 ```php
 Symlink\Models\Post
