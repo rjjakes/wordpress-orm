@@ -2,6 +2,9 @@
 
 namespace Symlink\ORM;
 
+use Symlink\ORM\Models\BaseModel;
+use Symlink\ORM\Repositories\BaseRepository;
+
 define('ORM_PERSIST_INSERT', 1);
 define('ORM_PERSIST_UPDATE', 2);
 define('ORM_PERSIST_DELETE', 3);
@@ -33,6 +36,28 @@ class Manager {
 
     // Return the instance.
     return new Manager();
+  }
+
+  /**
+   * Get repository instance from classname.
+   *
+   * @param $classname
+   *
+   * @return \Symlink\ORM\Repositories\BaseRepository
+   */
+  public function getRepository($classname) {
+
+    // Get the annotations for this class.
+    $annotations = Mapping::getMapper()->getProcessed($classname);
+
+    // Get the repository for this class (this has already been validated in the Mapper). .
+    if (isset($annotations['ORM_Repository'])) {
+      return $annotations['ORM_Repository']::getInstance($classname, $annotations);
+    }
+    // No repository set, so assume the base.
+    else {
+      return BaseRepository::getInstance($classname, $annotations);
+    }
   }
 
   /**
@@ -75,7 +100,7 @@ class Manager {
   /**
    * Apply changes to all models queued up with persist().
    * Attempts to combine queries to reduce MySQL load.
-   * @throws \Symlink\ORM\FailedToInsertException
+   * @throws \Symlink\ORM\Exceptions\FailedToInsertException
    */
   public function flush() {
     global $wpdb;
@@ -129,7 +154,7 @@ class Manager {
           $count = $wpdb->query($wpdb->prepare($sql, $values['values']));
 
           if (!$count) {
-            throw new FailedToInsertException(__('Failed to insert one or more records into the database.'));
+            throw new \Symlink\ORM\Exceptions\FailedToInsertException(__('Failed to insert one or more records into the database.'));
           }
         }
       }

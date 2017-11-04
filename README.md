@@ -4,7 +4,8 @@
 
 A lightweight, Doctrine style ORM for Wordpress 4.8+. Requires PHP 5.5.9+
 
-This library borrows a lot of concepts from Doctrine for Symfony and applies them to Wordpress. 
+This library borrows a lot of concepts from Doctrine for Symfony including the mapper, entity manager, repositories,
+one-to-many entity relationships and a query builder.  
 
 It acts as a layer sitting on top of the internal Wordpress `$wpdb` class. 
 

@@ -59,9 +59,10 @@ class Mapping {
    * @param $classname
    *
    * @return mixed
-   * @throws \Symlink\ORM\NoModelPropertiesExcception
-   * @throws \Symlink\ORM\RequiredAnnotationMissingException
-   * @throws \Symlink\ORM\UnknownColumnTypeException
+   * @throws \Symlink\ORM\Exceptions\NoModelPropertiesException
+   * @throws \Symlink\ORM\Exceptions\RepositoryClassNotDefinedException
+   * @throws \Symlink\ORM\Exceptions\RequiredAnnotationMissingException
+   * @throws \Symlink\ORM\Exceptions\UnknownColumnTypeException
    */
   public function getProcessed($classname) {
 
@@ -69,38 +70,51 @@ class Mapping {
       // Get the annotation reader instance.
       $class_annotations = $this->getReader()->getClassAnnotations($classname);
 
-      // Check the model annotations.
+      // Validate @ORM_Type
       if (!$class_annotations->get('ORM_Type')) {
         $this->models[$classname]['validated'] = FALSE;
 
-        throw new RequiredAnnotationMissingException(__('The annotation ORM_Type does not exist on the model.'));
+        throw new \Symlink\ORM\Exceptions\RequiredAnnotationMissingException(sprintf(__('The annotation ORM_Type does not exist on the model %s.'), $classname));
       }
       else {
         $this->models[$classname]['ORM_Type'] = $class_annotations->get('ORM_Type');
       }
 
+      // Validate @ORM_Table
       if (!$class_annotations->get('ORM_Table')) {
         $this->models[$classname]['validated'] = FALSE;
-        throw new RequiredAnnotationMissingException(__('The annotation ORM_Table does not exist on the model.'));
+        throw new \Symlink\ORM\Exceptions\RequiredAnnotationMissingException(sprintf(__('The annotation ORM_Table does not exist on the model %s.'), $classname));
       }
       else {
         $this->models[$classname]['ORM_Table'] = $class_annotations->get('ORM_Table');
       }
 
+      // Validate @ORM_UUID.
       if (!$class_annotations->get('ORM_UUID')) {
         $this->models[$classname]['validated'] = FALSE;
-        throw new RequiredAnnotationMissingException(__('The annotation ORM_UUID does not exist on the model.'));
+        throw new \Symlink\ORM\Exceptions\RequiredAnnotationMissingException(sprintf(__('The annotation ORM_UUID does not exist on the model %s.'), $classname));
       }
       else {
         $this->models[$classname]['ORM_UUID'] = filter_var($class_annotations->get('ORM_UUID'), FILTER_VALIDATE_BOOLEAN);
       }
 
+      // Validate @ORM_AllowSchemaUpdate
       if (!$class_annotations->get('ORM_AllowSchemaUpdate')) {
         $this->models[$classname]['validated'] = FALSE;
-        throw new RequiredAnnotationMissingException(__('The annotation ORM_AllowSchemaUpdate does not exist on the model.'));
+        throw new \Symlink\ORM\Exceptions\RequiredAnnotationMissingException(sprintf(__('The annotation ORM_AllowSchemaUpdate does not exist on the model.'), $classname));
       }
       else {
         $this->models[$classname]['ORM_AllowSchemaUpdate'] = filter_var($class_annotations->get('ORM_AllowSchemaUpdate'), FILTER_VALIDATE_BOOLEAN);;
+      }
+
+      // Validate @ORM_Repository
+      if ($class_annotations->get('ORM_Repository')) {
+        if (!class_exists($class_annotations->get('ORM_Repository'))) {
+          throw new \Symlink\ORM\Exceptions\RepositoryClassNotDefinedException(sprintf(__('Repository class %s does not exist on model %s.'), $class_annotations->get('ORM_Repository'), $classname));
+        }
+        else {
+          $this->models[$classname]['ORM_Repository'] = $class_annotations->get('ORM_Repository');
+        }
       }
 
       // Check the property annotations.
@@ -139,7 +153,7 @@ class Mapping {
               'text',
               'float',
             ])) {
-              throw new UnknownColumnTypeException(__('Unknown model property column type set in @ORM_Column_Type.'));
+              throw new \Symlink\ORM\Exceptions\UnknownColumnTypeException(sprintf(__('Unknown model property column type set in @ORM_Column_Type on model %s..'), $classname));
             }
 
             // Build the rest of the schema partial.
@@ -176,7 +190,7 @@ class Mapping {
         }
       }
       else {
-        throw new NoModelPropertiesExcception(__('The model does not contain any properties.'));
+        throw new \Symlink\ORM\Exceptions\NoModelPropertiesException(sprintf(__('The model %s does not contain any properties.'), $classname));
       }
     }
 
@@ -184,15 +198,14 @@ class Mapping {
     return $this->models[$classname];
   }
 
-
   /**
-   * Compares a database table schema to the model schema (as defined in the
-   * annotations). If there any differences, the database schema is modified
-   * to match the model.
+   * Compares a database table schema to the model schema (as defined in th
+   * annotations). If there any differences, the database schema is modified to
+   * match the model.
    *
    * @param $classname
    *
-   * @throws \Symlink\ORM\AllowSchemaUpdateIsFalseException
+   * @throws \Symlink\ORM\Exceptions\AllowSchemaUpdateIsFalseException
    */
   public function updateSchema($classname) {
     global $wpdb;
@@ -202,7 +215,7 @@ class Mapping {
 
     // Are we allowed to update the schema of this model in the db?
     if (!$mapped['ORM_AllowSchemaUpdate']) {
-      throw new AllowSchemaUpdateIsFalseException(__('Refused to update model schema. ORM_AllowSchemaUpdate is FALSE.'));
+      throw new \Symlink\ORM\Exceptions\AllowSchemaUpdateIsFalseException(sprintf(__('Refused to update model schema %s. ORM_AllowSchemaUpdate is FALSE.'), $classname));
     }
 
     // Create an ID type string.
@@ -210,7 +223,6 @@ class Mapping {
     $id_type_string = 'id mediumint(9) NOT NULL AUTO_INCREMENT';
 
     // Build the SQL CREATE TABLE command for use with dbDelta.
-    $charset_collate = $wpdb->get_charset_collate();
     $table_name = $wpdb->prefix . $mapped['ORM_Table'];
 
     $charset_collate = $wpdb->get_charset_collate();

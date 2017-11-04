@@ -2,29 +2,60 @@
 
 namespace Symlink\ORM\Repositories;
 
+use Symlink\ORM\QueryBuilder;
 
-// https://symfony.com/doc/current/doctrine.html#fetching-objects-from-the-database
 class BaseRepository {
 
-  /**
-   * @var \Symlink\ORM\Repositories\BaseRepository
-   */
-  static $service;
+  private $classname;
+
+  private $annotations;
 
   /**
-   * Initializes a non static copy of itself when called. Subsequent calls
-   * return the same object (fake dependency injection/service).
+   * BaseRepository constructor.
+   *
+   * @param $classname
+   * @param $annotations
+   */
+  public function __construct($classname, $annotations) {
+    $this->classname = $classname;
+    $this->annotations = $annotations;
+  }
+
+  /**
+   * @param $classname
+   * @param $annotations
    *
    * @return \Symlink\ORM\Repositories\BaseRepository
    */
-  public static function getRepository() {
-    // Initialize the service if it's not already set.
-    if (!self::$service) {
-      self::$service = new BaseRepository();
-    }
+  public static function getInstance($classname, $annotations) {
+    // Get the class (as this could be a child of BaseRepository)
+    $this_repository_class = get_called_class();
 
-    // Return the instance.
-    return new BaseRepository();
+    // Return a new instance of the class.
+    return new $this_repository_class($classname, $annotations);
+  }
+
+  /**
+   * @return \Symlink\ORM\QueryBuilder
+   */
+  public function createQueryBuilder() {
+    return new QueryBuilder($this);
+  }
+
+  /**
+   * Getter used in the query builder.
+   * @return mixed
+   */
+  public function getObjectClass() {
+    return $this->classname;
+  }
+
+  /**
+   * Getter used in the query builder.
+   * @return array
+   */
+  public function getObjectProperties() {
+    return array_keys($this->annotations['schema']);
   }
 
   /**
