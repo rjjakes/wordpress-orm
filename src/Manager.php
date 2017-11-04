@@ -75,6 +75,7 @@ class Manager {
   /**
    * Apply changes to all models queued up with persist().
    * Attempts to combine queries to reduce MySQL load.
+   * @throws \Symlink\ORM\FailedToInsertException
    */
   public function flush() {
     global $wpdb;
@@ -128,7 +129,7 @@ class Manager {
           $count = $wpdb->query($wpdb->prepare($sql, $values['values']));
 
           if (!$count) {
-            return new \WP_Error('orm_failed_to_insert', __('Failed to insert one or more records into the database.'));
+            throw new FailedToInsertException(__('Failed to insert one or more records into the database.'));
           }
         }
       }

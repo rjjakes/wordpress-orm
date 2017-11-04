@@ -4,8 +4,7 @@
 
 A lightweight, Doctrine style ORM for Wordpress 4.8+. Requires PHP 5.5.9+
 
-This library borrows a lot of concepts from Doctrine for Symfony and applies them to Wordpress. Unlike Doctrine, this
-library has limited capabilities.
+This library borrows a lot of concepts from Doctrine for Symfony and applies them to Wordpress. 
 
 It acts as a layer sitting on top of the internal Wordpress `$wpdb` class. 
 
@@ -14,7 +13,7 @@ It acts as a layer sitting on top of the internal Wordpress `$wpdb` class.
 I came to Wordpress from a Symfony development background. I wanted to work with objects instead of manually writing
 SQL queries. I looked around for a good ORM and was unable to find anything that fulfilled my requirements. 
 
-Getting Doctrine to qork with Wordpress was complex and seemed like overkill as it's a very heavy weight library. 
+Getting Doctrine to work with Wordpress was complex and seemed like overkill as it's a very heavy weight library. 
 
 There's also: https://github.com/tareq1988/wp-eloquent which is really good, but is more of a query builder for
 existing Wordpress tables.
@@ -30,7 +29,7 @@ composer require rjjakes/wordpress-orm
 
 ### Create a model
 
-To use the ORM, first create a pure class that extends the ORM base model and add a number of properties as protected
+To use the ORM, first create a class that extends the ORM base model and add a number of properties as protected
 variables like so:
 
 ```php
@@ -187,6 +186,22 @@ Now check your database and you'll see a new row containing your model data.
 
 @todo
 
+### Deleting model tables from the database.
+
+@todo
+
+### Create a custom repository
+
+@todo
+
+### Associations / Relationships
+
+@todo
+
+## Exceptions
+
+@todo
+
 ## Pre-defined models
 
 @todo
@@ -203,8 +218,13 @@ Symlink\Models\User
 (Dependencies are automatically handled by Composer). 
 
 https://github.com/marcioAlmada/annotations
+
 https://github.com/ramsey/uuid
+
 
 ## Credits
 
 Maintained by: https://github.com/rjjakes
+
+This library is under active development, so I'll happily accept comments, issues and pull requests. 
+

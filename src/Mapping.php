@@ -57,7 +57,11 @@ class Mapping {
    * Process the class annotations, adding an entry the the $this->models array.
    *
    * @param $classname
-   * @return mixed|\WP_Error
+   *
+   * @return mixed
+   * @throws \Symlink\ORM\NoModelPropertiesExcception
+   * @throws \Symlink\ORM\RequiredAnnotationMissingException
+   * @throws \Symlink\ORM\UnknownColumnTypeException
    */
   public function getProcessed($classname) {
 
@@ -68,7 +72,8 @@ class Mapping {
       // Check the model annotations.
       if (!$class_annotations->get('ORM_Type')) {
         $this->models[$classname]['validated'] = FALSE;
-        return new \WP_Error('orm_missing_annotation', __('The annotation ORM_Type does not exist on the model.'));
+
+        throw new RequiredAnnotationMissingException(__('The annotation ORM_Type does not exist on the model.'));
       }
       else {
         $this->models[$classname]['ORM_Type'] = $class_annotations->get('ORM_Type');
@@ -76,7 +81,7 @@ class Mapping {
 
       if (!$class_annotations->get('ORM_Table')) {
         $this->models[$classname]['validated'] = FALSE;
-        return new \WP_Error('orm_missing_annotation', __('The annotation ORM_Table does not exist on the model.'));
+        throw new RequiredAnnotationMissingException(__('The annotation ORM_Table does not exist on the model.'));
       }
       else {
         $this->models[$classname]['ORM_Table'] = $class_annotations->get('ORM_Table');
@@ -84,7 +89,7 @@ class Mapping {
 
       if (!$class_annotations->get('ORM_UUID')) {
         $this->models[$classname]['validated'] = FALSE;
-        return new \WP_Error('orm_missing_annotation', __('The annotation ORM_UUID does not exist on the model.'));
+        throw new RequiredAnnotationMissingException(__('The annotation ORM_UUID does not exist on the model.'));
       }
       else {
         $this->models[$classname]['ORM_UUID'] = filter_var($class_annotations->get('ORM_UUID'), FILTER_VALIDATE_BOOLEAN);
@@ -92,7 +97,7 @@ class Mapping {
 
       if (!$class_annotations->get('ORM_AllowSchemaUpdate')) {
         $this->models[$classname]['validated'] = FALSE;
-        return new \WP_Error('orm_missing_annotation', __('The annotation ORM_AllowSchemaUpdate does not exist on the model.'));
+        throw new RequiredAnnotationMissingException(__('The annotation ORM_AllowSchemaUpdate does not exist on the model.'));
       }
       else {
         $this->models[$classname]['ORM_AllowSchemaUpdate'] = filter_var($class_annotations->get('ORM_AllowSchemaUpdate'), FILTER_VALIDATE_BOOLEAN);;
@@ -134,7 +139,7 @@ class Mapping {
               'text',
               'float',
             ])) {
-              return new \WP_Error('orm_unknwon_column_type', __('Unknown model property column type set in @ORM_Column_Type.'));
+              throw new UnknownColumnTypeException(__('Unknown model property column type set in @ORM_Column_Type.'));
             }
 
             // Build the rest of the schema partial.
@@ -171,7 +176,7 @@ class Mapping {
         }
       }
       else {
-        return new \WP_Error('orm_missing_properties', __('The model does not contain any properties.'));
+        throw new NoModelPropertiesExcception(__('The model does not contain any properties.'));
       }
     }
 
@@ -184,10 +189,10 @@ class Mapping {
    * Compares a database table schema to the model schema (as defined in the
    * annotations). If there any differences, the database schema is modified
    * to match the model.
-
+   *
    * @param $classname
    *
-   * @return bool|\WP_Error
+   * @throws \Symlink\ORM\AllowSchemaUpdateIsFalseException
    */
   public function updateSchema($classname) {
     global $wpdb;
@@ -197,7 +202,7 @@ class Mapping {
 
     // Are we allowed to update the schema of this model in the db?
     if (!$mapped['ORM_AllowSchemaUpdate']) {
-      return new \WP_Error('orm_schema_update_rejected', __('Refused to update model schema. ORM_AllowSchemaUpdate is FALSE.'));
+      throw new AllowSchemaUpdateIsFalseException(__('Refused to update model schema. ORM_AllowSchemaUpdate is FALSE.'));
     }
 
     // Create an ID type string.
@@ -219,8 +224,6 @@ class Mapping {
     // Use dbDelta to do all the hard work.
     require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
     dbDelta($sql);
-
-    return TRUE;
   }
 
 }

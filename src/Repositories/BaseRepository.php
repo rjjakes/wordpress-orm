@@ -1,13 +1,13 @@
 <?php
 
-namespace Symlink\ORM;
+namespace Symlink\ORM\Repositories;
 
 
 // https://symfony.com/doc/current/doctrine.html#fetching-objects-from-the-database
-class Repository {
+class BaseRepository {
 
   /**
-   * @var \Symlink\ORM\Repository
+   * @var \Symlink\ORM\Repositories\BaseRepository
    */
   static $service;
 
@@ -15,16 +15,16 @@ class Repository {
    * Initializes a non static copy of itself when called. Subsequent calls
    * return the same object (fake dependency injection/service).
    *
-   * @return \Symlink\ORM\Repository
+   * @return \Symlink\ORM\Repositories\BaseRepository
    */
   public static function getRepository() {
     // Initialize the service if it's not already set.
     if (!self::$service) {
-      self::$service = new Repository();
+      self::$service = new BaseRepository();
     }
 
     // Return the instance.
-    return new Repository();
+    return new BaseRepository();
   }
 
   /**

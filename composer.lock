@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "00cc1e2099c2a1e8f00e652ff86da9f6",
-    "content-hash": "f051aaed153651d937ee5219e440885e",
+    "hash": "87e3558cce1c13602aa150a48760c891",
+    "content-hash": "3dccf0c1e30a9e4eb620618f598cb9ba",
     "packages": [
         {
             "name": "minime/annotations",
@@ -283,12 +283,57 @@
                 "utils"
             ],
             "time": "2014-09-17 18:04:00"
+        },
+        {
+            "name": "simettric/wp-query-builder",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Simettric/WPQueryBuilder.git",
+                "reference": "3b9019fcfdca0cddd74ff905621dd0e290092eed"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Simettric/WPQueryBuilder/zipball/3b9019fcfdca0cddd74ff905621dd0e290092eed",
+                "reference": "3b9019fcfdca0cddd74ff905621dd0e290092eed",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.9"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Simettric\\WPQueryBuilder\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Asier Marqués",
+                    "email": "asier@simettric.com"
+                }
+            ],
+            "description": "A query builder for WordPress WP_Query, inspired by Doctrine Query Builder",
+            "homepage": "http://simettric.com",
+            "keywords": [
+                "wordpress"
+            ],
+            "time": "2017-07-27 10:10:02"
         }
     ],
     "packages-dev": [],
     "aliases": [],
-    "minimum-stability": "stable",
-    "stability-flags": [],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "simettric/wp-query-builder": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

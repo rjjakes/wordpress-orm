@@ -1,8 +1,9 @@
 <?php
 
-namespace Symlink\ORM;
+namespace Symlink\ORM\Models;
 
 use Ramsey\Uuid\Uuid;
+use Symlink\ORM\PropertyDoesNotExistException;
 
 abstract class BaseModel {
 
@@ -47,12 +48,14 @@ abstract class BaseModel {
    * Generic getter.
    *
    * @param $column
-   * @return \WP_Error|mixed
+   *
+   * @return mixed
+   * @throws \Symlink\ORM\PropertyDoesNotExistException
    */
   public function get($column) {
     // Check to see if the property exists on the model.
     if (!property_exists($this, $column)) {
-      return new \WP_Error('orm_no_property', __('The property does not exist on the model.') );
+      throw new PropertyDoesNotExistException(__('The property does not exist on the model.'));
     }
 
     // Return the value of the field.
@@ -64,12 +67,14 @@ abstract class BaseModel {
    *
    * @param $column
    * @param $value
-   * @return \WP_Error|bool
+   *
+   * @return bool
+   * @throws \Symlink\ORM\PropertyDoesNotExistException
    */
   public function set($column, $value) {
     // Check to see if the property exists on the model.
     if (!property_exists($this, $column)) {
-      return new \WP_Error('orm_no_property', __('The property does not exist on the model.') );
+      throw new PropertyDoesNotExistException(__('The property does not exist on the model.'));
     }
 
     // Update the model with the value.
