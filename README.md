@@ -31,7 +31,11 @@ composer require rjjakes/wordpress-orm
 ### Create a model
 
 To use the ORM, first create a class that extends the ORM base model and add a number of properties as protected
-variables like so:
+variables. The property names must exactly match the desired SQL column names (there is no name mapping).
+ 
+Note that a property of `$id` is added to the model when you do `extends BaseModel` so you do not need to add that.   
+
+Example:
 
 ```php
 <?php
@@ -201,7 +205,34 @@ Now check your database and you'll see a new row containing your model data.
 
 ## Exceptions
 
-@todo
+Wordpress ORM uses Exceptions to handle most failure states. You'll want to wrap calls to ORM functions in 
+`try {} catch() {}` blocks to handle these exceptions and send errors or warning messages to the user.
+    
+For example:
+    
+```php
+try {
+    $query = $repository->createQueryBuilder()
+      ->where('id', 3, '==')  // Equals operator should be '=' not '=='
+      ->buildQuery();
+} catch (\Symlink\ORM\Exceptions\InvalidOperatorException $e) {
+    // ... warn the user about the bad operator or handle it another way. 
+}
+
+```
+    
+The available exceptions are as follows.     
+
+```php
+AllowSchemaUpdateIsFalseException
+```
+
+x
+
+```php
+FailedToInsertException
+```
+
 
 ## Pre-defined models
 
