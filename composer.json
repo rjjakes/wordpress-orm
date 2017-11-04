@@ -1,12 +1,12 @@
 {
   "name": "rjjakes/wordpress-orm",
-  "description": "Doctrine style ORM for Wordpress.",
+  "description": "WORM. Doctrine style ORM for Wordpress.",
   "keywords": ["wordpress", "plugin", "orm", "doctrine", "composer", "sql"],
   "homepage": "https://github.com/rjjakes/wordpress-orm",
   "require": {
-    "php": ">=5.5.9",
-    "minime/annotations": "3.1",
-    "myclabs/deep-copy": "^1.7"
+    "php": ">=5.5",
+    "minime/annotations": "^3.1",
+    "myclabs/deep-copy": "1.6.1"
   },
   "license": "MIT",
   "authors": [

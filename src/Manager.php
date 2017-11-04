@@ -11,7 +11,7 @@ class Manager {
   /**
    * @var \Symlink\ORM\Manager
    */
-  static $service;
+  private static $manager_service = null;
 
   /**
    * Holds the resuable instance of DeepCopy().
@@ -41,12 +41,12 @@ class Manager {
    */
   public static function getManager() {
     // Initialize the service if it's not already set.
-    if (!self::$service) {
-      self::$service = new Manager();
+    if (self::$manager_service === null) {
+      self::$manager_service = new Manager();
     }
 
     // Return the instance.
-    return new Manager();
+    return self::$manager_service;
   }
 
   /**
@@ -141,6 +141,8 @@ class Manager {
 
   /**
    * Add new objects to the database.
+   * This will perform one query per table no matter how many records need to
+   * be added.
    *
    * @throws \Symlink\ORM\Exceptions\FailedToInsertException
    */
@@ -149,7 +151,7 @@ class Manager {
 
     $insert = [];
 
-    // Preprocess data for INSERTs.
+    // Preprocess data for INSERTs (split queries - one per table).
     foreach ($this->persisted_objects as $hash => $item) {
 
       // Get the values from the schema.
@@ -192,7 +194,41 @@ class Manager {
 
   }
 
+  /**
+   * Compares known database state of tracked objects and compares them with
+   * the current state. Applies any changes to the database.
+   *
+   * This will perform one query per table no matter how many records need to
+   * be updated.
+   * https://stackoverflow.com/questions/3432/multiple-updates-in-mysql
+   */
   private function _flush_update() {
+    global $wpdb;
+
+    $update = [];
+
+    foreach ($this->tracked_objects as $hash => $item) {
+      // Model has changed since it was last tracked.
+      if ($item['model'] !== $item['last_state']) {
+
+        $x = $item;
+        $update[$item['annotations']['ORM_Table']];
+
+      }
+
+    }
+
+    /*
+INSERT INTO table (id, Col1, Col2)
+    VALUES
+    (1,1,1),
+    (2,2,3),
+    (3,9,3),
+    (4,10,12)
+ON DUPLICATE KEY UPDATE
+    Col1=VALUES(Col1), Col2=VALUES(Col2);
+     */
+
   }
 
   private function _flush_delete() {

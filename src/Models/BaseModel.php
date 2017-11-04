@@ -8,7 +8,7 @@ abstract class BaseModel {
    * Every model has an ID.
    * @var
    */
-  protected $id;
+  protected $ID;
 
   /**
    * BaseModel constructor.
@@ -22,7 +22,7 @@ abstract class BaseModel {
    * @return string
    */
   public function getId() {
-    return $this->id;
+    return $this->ID;
   }
 
   /**

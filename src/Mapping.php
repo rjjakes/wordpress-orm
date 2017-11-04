@@ -10,7 +10,7 @@ class Mapping {
   /**
    * @var \Symlink\ORM\Manager
    */
-  static $service;
+  private static $mapping_service = null;
 
   /**
    * @var \Minime\Annotations\Reader
@@ -31,12 +31,12 @@ class Mapping {
    */
   public static function getMapper() {
     // Initialize the service if it's not already set.
-    if (!self::$service) {
-      self::$service = new Mapping();
+    if (self::$mapping_service === null) {
+      self::$mapping_service = new Mapping();
     }
 
     // Return the instance.
-    return new Mapping();
+    return self::$mapping_service;
   }
 
   /**
@@ -203,8 +203,8 @@ class Mapping {
     }
 
     // Create an ID type string.
-    $id_type = 'id';
-    $id_type_string = 'id mediumint(9) NOT NULL AUTO_INCREMENT';
+    $id_type = 'ID';
+    $id_type_string = 'ID mediumint(9) NOT NULL AUTO_INCREMENT';
 
     // Build the SQL CREATE TABLE command for use with dbDelta.
     $table_name = $wpdb->prefix . $mapped['ORM_Table'];

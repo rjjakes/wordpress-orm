@@ -215,6 +215,9 @@ class QueryBuilder {
             $object->set($property, $value);
           });
 
+          // Track the object.
+          Manager::getManager()->track($object);
+
           // Save it.
           $objects[] = $object;
         }
