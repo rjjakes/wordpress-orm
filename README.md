@@ -50,7 +50,6 @@ use Symlink\ORM\BaseModel as Model;
 /**
  * @ORM_Type Entity
  * @ORM_Table "product"
- * @ORM_UUID false
  * @ORM_AllowSchemaUpdate True
  */
 class Product extends Model {
@@ -90,10 +89,6 @@ class Product extends Model {
 `ORM_Table` This is the actual table name in the database without the wordpress suffix. So with a default Wordpress
 installation, this will create a table called: `wp_product` in your database.  
 
-`ORM_UUID` Optionally adds a UUID field to the table. This field will contain a unique UUID/4 string for each row. This
-was required for my own project, so I have included it here. Unless you really need or want this feature, you probably
-want to set this field to: False.
-   
 `ORM_AllowSchemaUpdate` This allows or blocks a database schema update with the updateSchema() function (see below).
 For your custom models, you want to set this to True. When mapping models to existing Wordpress tables (such as
 wp_posts), this should be set to False to avoid corrupting that table.      
@@ -264,7 +259,7 @@ Return an object by id:
 
 ```php
 $results = Manager::getManager()
-            ->getRepository(Campaign::class)
+            ->getRepository(Product::class)
             ->find($id);
 ```
  
@@ -272,7 +267,7 @@ Return all objects sorted by ascending id.
 
 ```php
 $results = Manager::getManager()
-            ->getRepository(Campaign::class)
+            ->getRepository(Product::class)
             ->findAll();
 ```
  
@@ -280,7 +275,7 @@ Return all objects matching property name and value:
 
 ```php
 $results = Manager::getManager()
-            ->getRepository(Campaign::class)
+            ->getRepository(Product::class)
             ->findBy($property_name, $value);
 ```
  
@@ -354,9 +349,9 @@ Symlink\Models\User
 
 (Dependencies are automatically handled by Composer). 
 
-https://github.com/marcioAlmada/annotations
+https://github.com/marcioalmada/annotations
 
-https://github.com/ramsey/uuid
+https://github.com/myclabs/deepcopy
 
 
 ## Credits

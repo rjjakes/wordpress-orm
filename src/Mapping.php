@@ -89,15 +89,6 @@ class Mapping {
         $this->models[$classname]['ORM_Table'] = $class_annotations->get('ORM_Table');
       }
 
-      // Validate @ORM_UUID.
-      if (!$class_annotations->get('ORM_UUID')) {
-        $this->models[$classname]['validated'] = FALSE;
-        throw new \Symlink\ORM\Exceptions\RequiredAnnotationMissingException(sprintf(__('The annotation ORM_UUID does not exist on the model %s.'), $classname));
-      }
-      else {
-        $this->models[$classname]['ORM_UUID'] = filter_var($class_annotations->get('ORM_UUID'), FILTER_VALIDATE_BOOLEAN);
-      }
-
       // Validate @ORM_AllowSchemaUpdate
       if (!$class_annotations->get('ORM_AllowSchemaUpdate')) {
         $this->models[$classname]['validated'] = FALSE;
@@ -121,15 +112,8 @@ class Mapping {
       $reflection_class = new \ReflectionClass($classname);
       $properties = $reflection_class->getProperties();
 
-      // Optionally add the UUID column.
-      if ($this->models[$classname]['ORM_UUID']) {
-        $this->models[$classname]['schema']['uuid'] = 'uuid varchar(36) NOT NULL';
-        $this->models[$classname]['placeholder']['uuid'] = '%s';
-
-      }
-      else {
-        $this->models[$classname]['schema'] = [];
-      }
+      // Start with blank schema.
+      $this->models[$classname]['schema'] = [];
 
       // Loop through the class properties.
       if (is_array($properties) || !count($properties)) {

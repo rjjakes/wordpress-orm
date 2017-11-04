@@ -2,9 +2,6 @@
 
 namespace Symlink\ORM\Models;
 
-use Ramsey\Uuid\Uuid;
-use Symlink\ORM\PropertyDoesNotExistException;
-
 abstract class BaseModel {
 
   /**
@@ -14,16 +11,9 @@ abstract class BaseModel {
   protected $id;
 
   /**
-   * Some models have an UUID.
-   * @var
-   */
-  protected $uuid;
-
-  /**
    * BaseModel constructor.
    */
   public function __construct() {
-    $this->uuid = Uuid::uuid4()->toString();
   }
 
   /**
@@ -36,30 +26,21 @@ abstract class BaseModel {
   }
 
   /**
-   * Getter.
-   *
-   * @return string
-   */
-  public function getUUID() {
-    return $this->uuid;
-  }
-
-  /**
    * Generic getter.
    *
    * @param $column
    *
    * @return mixed
-   * @throws \Symlink\ORM\PropertyDoesNotExistException
+   * @throws \Symlink\ORM\Exceptions\PropertyDoesNotExistException
    */
-  public function get($column) {
+  public function get($property) {
     // Check to see if the property exists on the model.
-    if (!property_exists($this, $column)) {
-      throw new PropertyDoesNotExistException(__('The property does not exist on the model.'));
+    if (!property_exists($this, $property)) {
+      throw new \Symlink\ORM\Exceptions\PropertyDoesNotExistException(sprintf(__('The property %s does not exist on the model %s.'), $property, get_class($this)));
     }
 
     // Return the value of the field.
-    return $this->$column;
+    return $this->$property;
   }
 
   /**
@@ -69,12 +50,12 @@ abstract class BaseModel {
    * @param $value
    *
    * @return bool
-   * @throws \Symlink\ORM\PropertyDoesNotExistException
+   * @throws \Symlink\ORM\Exceptions\PropertyDoesNotExistException
    */
   public function set($column, $value) {
     // Check to see if the property exists on the model.
     if (!property_exists($this, $column)) {
-      throw new PropertyDoesNotExistException(__('The property does not exist on the model.'));
+      throw new \Symlink\ORM\Exceptions\PropertyDoesNotExistException(sprintf(__('The property does not exist on the model %s.'), get_class($this)));
     }
 
     // Update the model with the value.
