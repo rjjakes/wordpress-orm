@@ -258,9 +258,31 @@ $results = $query->getResults(TRUE);
 Building a query every time you want to select objects from the database is not best practice. Ideally you would create
 some helper functions that abstract the query builder away from your controller. 
  
-There are several built-in functions to the base repository that are available like this:
+There are several built-in functions in the base repository. 
 
-@todo
+Return an object by id:
+
+```php
+$results = Manager::getManager()
+            ->getRepository(Campaign::class)
+            ->find($id);
+```
+ 
+Return all objects sorted by ascending id. 
+
+```php
+$results = Manager::getManager()
+            ->getRepository(Campaign::class)
+            ->findAll();
+```
+ 
+Return all objects matching property name and value: 
+
+```php
+$results = Manager::getManager()
+            ->getRepository(Campaign::class)
+            ->findBy($property_name, $value);
+```
  
 To add more repository query functions, you can subclass the `BaseRepository` class and tell your object to use that
 instead of `BaseRepository`. That is covered in the section below called: *Create a custom repository*   

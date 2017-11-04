@@ -82,17 +82,29 @@ class BaseRepository {
 
   /**
    * Find a single object by ID.
+   *
    * @param $id
+   *
+   * @return array|bool|mixed
    */
   public function find($id) {
+    return $this->createQueryBuilder()
+                 ->where('id', $id, '=')
+                 ->orderBy('id', 'ASC')
+                 ->buildQuery()
+                 ->getResults();
   }
 
   /**
    * Return all objects of this type.
-   * @return array
+   *
+   * @return array|bool|mixed
    */
   public function findAll() {
-    return [];
+    return $this->createQueryBuilder()
+                ->orderBy('id', 'ASC')
+                ->buildQuery()
+                ->getResults();
   }
 
   /**
@@ -101,10 +113,14 @@ class BaseRepository {
    * @param $property
    * @param $value
    *
-   * @return array
+   * @return array|bool|mixed
    */
   public function findBy($property, $value) {
-    return [];
+    return $this->createQueryBuilder()
+                ->where($property, $value, '=')
+                ->orderBy('id', 'ASC')
+                ->buildQuery()
+                ->getResults();
   }
 
 }
