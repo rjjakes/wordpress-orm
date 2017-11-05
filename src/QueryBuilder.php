@@ -218,7 +218,8 @@ class QueryBuilder {
           });
 
           // Track the object.
-          Manager::getManager()->track($object);
+          $em = Manager::getManager();
+          $em->track($object);
 
           // Save it.
           $objects[] = $object;

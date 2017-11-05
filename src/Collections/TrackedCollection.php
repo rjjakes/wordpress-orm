@@ -2,6 +2,8 @@
 
 namespace Symlink\ORM\Collections;
 
+use DeepCopy\DeepCopy;
+
 define('_OBJECT_NEW', 1);
 define('_OBJECT_TRACKED', 2);
 
@@ -21,10 +23,17 @@ class TrackedCollection implements \ArrayAccess {
   private $list;
 
   /**
+   * @var
+   */
+  private $copier;
+
+
+  /**
    * TrackedCollection constructor.
    */
   public function __construct() {
     $this->list = [];
+    $this->copier = new DeepCopy();
   }
 
   /**
@@ -43,6 +52,7 @@ class TrackedCollection implements \ArrayAccess {
         // Add the table name and schema data (only once).
         if (!isset($data[get_class($item['model'])])) {
           $data[get_class($item['model'])] = [
+            'objects'            => [],
             'table_name'         => $item['model']->getTableName(),
             'columns'            => array_keys($item['model']->getSchema()),
             'placeholders'       => $item['model']->getPlaceholders(),
@@ -51,12 +61,50 @@ class TrackedCollection implements \ArrayAccess {
           ];
         }
 
+        // Store the object.
+        $data[get_class($item['model'])]['objects'][] = $item['model'];
+
         // Now add the placeholder and row data.
         $data[get_class($item['model'])]['placeholders_count'] += 1;
         $data[get_class($item['model'])]['values'] = array_merge($data[get_class($item['model'])]['values'], $item['model']->getAllUnkeyedValues());
+      }
+    }
+
+    return $data;
+  }
+
+  /**
+   * Get data used to INSERT new objects into the database.
+   *
+   * @return array
+   */
+  public function getUpdateTableData() {
+    $data = [];
+
+    // Get the structural data.
+    foreach ($this->list as $item) {
+      // Only items with 'model' and 'last_state'.
+      if (isset($item['model']) && isset($item['last_state']) && $item['model'] !== $item['last_state']) {
+
+        $x = array_diff(
+          $item['model']->getAllValues(),
+          $item['last_state']->getAllValues()
+        );
 
       }
     }
+
+    /*
+INSERT INTO table (id, Col1, Col2)
+  VALUES
+    (1,1,1),
+    (2,2,3),
+    (3,9,3),
+    (4,10,12)
+ON DUPLICATE KEY UPDATE
+Col1=VALUES(Col1), Col2=VALUES(Col2);
+ */
+
 
     return $data;
   }
@@ -82,7 +130,7 @@ class TrackedCollection implements \ArrayAccess {
     else if ($state == _OBJECT_TRACKED) {
       $this->list[$obj_hash] = [
         'model'      => $object,
-        'last_state' => clone $object,
+        'last_state' => $this->copier->copy($object)
       ];
     }
   }
@@ -136,19 +184,28 @@ class TrackedCollection implements \ArrayAccess {
   /**
    * Return an array of the objects to be INSERTed.
    */
-  public function getNew() {
+  public function getPersistedObjects() {
+    $persisted_list = [];
+
+    foreach ($this->list as $object) {
+      if (isset($item['model']) && !isset($item['last_state'])) {
+        $persisted_list[] = $item['model'];
+      }
+    }
+
+    return $persisted_list;
   }
 
   /**
    * Return an array of the objects to be UPDATEd
    */
-  public function getChanged() {
+  public function getChangedObjects() {
   }
 
   /**
    * Return an array of the objects to be DELETEd.
    */
-  public function getRemoved() {
+  public function getRemovedObjects() {
   }
 
 }

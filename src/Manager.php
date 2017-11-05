@@ -106,7 +106,7 @@ class Manager {
   private function _flush_insert() {
     global $wpdb;
 
-    // Get a list of tables and columns that have data to update.
+    // Get a list of tables and columns that have data to insert.
     $insert = $this->tracked->getInsertTableData();
 
     // Process the INSERTs
@@ -137,7 +137,14 @@ class Manager {
         $prepared = $wpdb->prepare($sql, $values['values']);
         $count    = $wpdb->query($prepared);
 
-        if (!$count) {
+        // Start tracking all the added objects.
+        if ($count) {
+          array_walk($values['objects'], function ($object) {
+            $this->track($object);
+          });
+        }
+        // Something went wrong.
+        else {
           throw new \Symlink\ORM\Exceptions\FailedToInsertException(__('Failed to insert one or more records into the database.'));
         }
       }
@@ -158,16 +165,9 @@ class Manager {
 
     $update = [];
 
-    foreach ($this->tracked_objects as $hash => $item) {
-      // Model has changed since it was last tracked.
-      if ($item['model'] !== $item['last_state']) {
+    // Get a list of tables and columns that have data to update.
+    $insert = $this->tracked->getUpdateTableData();
 
-        $x = $item;
-        $update[$item['annotations']['ORM_Table']];
-
-      }
-
-    }
 
     /*
 INSERT INTO table (id, Col1, Col2)
@@ -195,9 +195,9 @@ ON DUPLICATE KEY UPDATE
    * @throws \Symlink\ORM\Exceptions\FailedToInsertException
    */
   public function flush() {
-    //$this->_flush_update();   // UPDATE must come before INSERT.
+    $this->_flush_update();   // UPDATE must come before INSERT.
     $this->_flush_insert();
-    //$this->_flush_delete();
+    $this->_flush_delete();
   }
 
 }

@@ -10,7 +10,7 @@ class Mapping {
   /**
    * @var \Symlink\ORM\Manager
    */
-  private static $mapping_service = null;
+  private static $mapping_service = NULL;
 
   /**
    * @var \Minime\Annotations\Reader
@@ -19,6 +19,7 @@ class Mapping {
 
   /**
    * The processed models.
+   *
    * @var array
    */
   private $models;
@@ -31,7 +32,7 @@ class Mapping {
    */
   public static function getMapper() {
     // Initialize the service if it's not already set.
-    if (self::$mapping_service === null) {
+    if (self::$mapping_service === NULL) {
       self::$mapping_service = new Mapping();
     }
 
@@ -54,7 +55,7 @@ class Mapping {
   }
 
   /**
-   * Process the class annotations, adding an entry the the $this->models array.
+   * Process the class annotations, adding an entry the $this->models array.
    *
    * @param $classname
    *
@@ -110,72 +111,73 @@ class Mapping {
 
       // Check the property annotations.
       $reflection_class = new \ReflectionClass($classname);
-      $properties = $reflection_class->getProperties();
 
       // Start with blank schema.
       $this->models[$classname]['schema'] = [];
 
       // Loop through the class properties.
-      if (is_array($properties) || !count($properties)) {
-        foreach ($properties as $property) {
+      foreach ($reflection_class->getProperties() as $property) {
 
-          // Get the annotation of this property.
-          $property_annotation = $this->getReader()->getPropertyAnnotations($classname, $property->name);
+        // Get the annotation of this property.
+        $property_annotation = $this->getReader()
+                                    ->getPropertyAnnotations($classname, $property->name);
 
-          // Silently ignore properties that do not have the ORM_Column_Type annotation.
-          if ($property_annotation->get('ORM_Column_Type')) {
+        // Silently ignore properties that do not have the ORM_Column_Type annotation.
+        if ($property_annotation->get('ORM_Column_Type')) {
 
-            $column_type = strtolower($property_annotation->get('ORM_Column_Type'));
+          $column_type = strtolower($property_annotation->get('ORM_Column_Type'));
 
-            // Test the ORM_Column_Type
-            if (!in_array($column_type, [
-              'datetime',
-              'tinyint',
-              'smallint',
-              'bigint',
-              'varchar',
-              'text',
-              'float',
-            ])) {
-              throw new \Symlink\ORM\Exceptions\UnknownColumnTypeException(sprintf(__('Unknown model property column type set in @ORM_Column_Type on model %s..'), $classname));
-            }
-
-            // Build the rest of the schema partial.
-            $schema_string = $property->name .' ' . $column_type;
-
-            if ($property_annotation->get('ORM_Column_Length')) {
-              $schema_string .= '(' . $property_annotation->get('ORM_Column_Length') . ')';
-            }
-
-            if ($property_annotation->get('ORM_Column_Null')) {
-              $schema_string .= ' ' . $property_annotation->get('ORM_Column_Null');
-            }
-
-            // Add the schema to the mapper array for this class.
-            $placeholder_values_type = '%s';  // Initially assume column is string type.
-
-            if (in_array($column_type, [  // If the column is a decimal type.
-              'tinyint',
-              'smallint',
-              'bigint',
-            ])) {
-              $placeholder_values_type = '%d';
-            }
-
-            if (in_array($column_type, [  // If the column is a float type.
-              'float',
-            ])) {
-              $placeholder_values_type = '%f';
-            }
-
-            $this->models[$classname]['schema'][$property->name] = $schema_string;
-            $this->models[$classname]['placeholder'][$property->name] = $placeholder_values_type;
+          // Test the ORM_Column_Type
+          if (!in_array($column_type, [
+            'datetime',
+            'tinyint',
+            'smallint',
+            'bigint',
+            'varchar',
+            'tinytext',
+            'text',
+            'mediumtext',
+            'longtext',
+            'float',
+          ])
+          ) {
+            throw new \Symlink\ORM\Exceptions\UnknownColumnTypeException(sprintf(__('Unknown model property column type set in @ORM_Column_Type on model %s..'), $classname));
           }
+
+          // Build the rest of the schema partial.
+          $schema_string = $property->name . ' ' . $column_type;
+
+          if ($property_annotation->get('ORM_Column_Length')) {
+            $schema_string .= '(' . $property_annotation->get('ORM_Column_Length') . ')';
+          }
+
+          if ($property_annotation->get('ORM_Column_Null')) {
+            $schema_string .= ' ' . $property_annotation->get('ORM_Column_Null');
+          }
+
+          // Add the schema to the mapper array for this class.
+          $placeholder_values_type = '%s';  // Initially assume column is string type.
+
+          if (in_array($column_type, [  // If the column is a decimal type.
+            'tinyint',
+            'smallint',
+            'bigint',
+          ])) {
+            $placeholder_values_type = '%d';
+          }
+
+          if (in_array($column_type, [  // If the column is a float type.
+            'float',
+          ])) {
+            $placeholder_values_type = '%f';
+          }
+
+          $this->models[$classname]['schema'][$property->name]      = $schema_string;
+          $this->models[$classname]['placeholder'][$property->name] = $placeholder_values_type;
         }
       }
-      else {
-        throw new \Symlink\ORM\Exceptions\NoModelPropertiesException(sprintf(__('The model %s does not contain any properties.'), $classname));
-      }
+
+
     }
 
     // Return the processed annotations.
@@ -203,7 +205,7 @@ class Mapping {
     }
 
     // Create an ID type string.
-    $id_type = 'ID';
+    $id_type        = 'ID';
     $id_type_string = 'ID mediumint(9) NOT NULL AUTO_INCREMENT';
 
     // Build the SQL CREATE TABLE command for use with dbDelta.
@@ -218,7 +220,7 @@ class Mapping {
 ) $charset_collate;";
 
     // Use dbDelta to do all the hard work.
-    require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
   }
 

@@ -2,7 +2,6 @@
 
 namespace Symlink\ORM\Models;
 
-use DeepCopy\DeepCopy;
 use Symlink\ORM\Mapping;
 
 abstract class BaseModel {
@@ -12,16 +11,6 @@ abstract class BaseModel {
    * @var
    */
   protected $ID;
-
-  /**
-   * Deep clone.
-   *
-   * @return mixed
-   */
-  final public function __clone() {
-    $copier = new DeepCopy();
-    return $copier->copy($this);
-  }
 
   /**
    * Getter.
@@ -51,6 +40,18 @@ abstract class BaseModel {
    */
   public function getPlaceholders() {
     return Mapping::getMapper()->getProcessed(get_class($this))['placeholder'];
+  }
+
+  /**
+   * Return keyed values from this object as per the schema (no ID).
+   * @return array
+   */
+  public function getAllValues() {
+    $values = [];
+    foreach (array_keys($this->getSchema()) as $property) {
+      $values[$property] = $this->get($property);
+    }
+    return $values;
   }
 
   /**
