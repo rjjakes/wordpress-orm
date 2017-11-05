@@ -22,7 +22,6 @@ Getting Doctrine to work with Wordpress was complex and seemed like overkill as 
 There's also: https://github.com/tareq1988/wp-eloquent which is really good, but is more of a query builder for
 existing Wordpress tables.
 
-
 ## Installation
 
 ```
@@ -220,7 +219,7 @@ Available where() operators are:
 Available orderBy() operators are: 
 
 ```php
-'ASC' 'DESC'
+'ASC', 'DESC'
 ```
 
 To use the "IN" and "NOT IN" clauses of the ->where() function, pass in an array of values like so:
