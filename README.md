@@ -5,7 +5,7 @@
 A lightweight, Doctrine style ORM for Wordpress 4.8+. Requires PHP 5.5+
 
 This library borrows a lot of concepts from Doctrine for Symfony including the mapper, entity manager, repositories,
-one-to-many entity relationships and a query builder.  
+one-to-many entity relationships, lazy-loading of related entities and a query builder.  
 
 It acts as a layer sitting on top of the internal Wordpress `$wpdb` class. 
 
@@ -291,7 +291,7 @@ instead of `BaseRepository`. That is covered in the section below called: *Creat
 
 @todo
 
-### Deleting model tables from the database.
+### Dropping model tables from the database.
 
 @todo
 
@@ -299,7 +299,7 @@ instead of `BaseRepository`. That is covered in the section below called: *Creat
 
 @todo
 
-### Associations / Relationships
+### Relationships
 
 @todo
 
@@ -321,15 +321,10 @@ try {
 
 ```
     
-The available exceptions are as follows.     
+The exceptions are as follows.     
 
 ```php
 AllowSchemaUpdateIsFalseException
-```
-
-x
-
-```php
 FailedToInsertException
 ```
 

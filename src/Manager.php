@@ -2,36 +2,24 @@
 
 namespace Symlink\ORM;
 
-use DeepCopy\DeepCopy;
 use Symlink\ORM\Models\BaseModel;
 use Symlink\ORM\Repositories\BaseRepository;
+use Symlink\ORM\Collections\TrackedCollection;
 
 class Manager {
 
   /**
    * @var \Symlink\ORM\Manager
    */
-  private static $manager_service = null;
-
-  /**
-   * Holds the resuable instance of DeepCopy().
-   * @var
-   */
-  private $copier;
-
-  /**
-   * Holds an array of objects added via persist().
-   * @var
-   */
-  private $persisted_objects;
+  private static $manager_service = NULL;
 
   /**
    * Holds an array of objects the manager knows exist in the database (either
    * from a query or a previous persist() call).
    *
-   * @var array
+   * @var TrackedCollection
    */
-  private $tracked_objects;
+  private $tracked;
 
   /**
    * Initializes a non static copy of itself when called. Subsequent calls
@@ -41,7 +29,7 @@ class Manager {
    */
   public static function getManager() {
     // Initialize the service if it's not already set.
-    if (self::$manager_service === null) {
+    if (self::$manager_service === NULL) {
       self::$manager_service = new Manager();
     }
 
@@ -53,8 +41,7 @@ class Manager {
    * Manager constructor.
    */
   public function __construct() {
-    $this->persisted_objects = [];
-    $this->tracked_objects = [];
+    $this->tracked = new TrackedCollection;
   }
 
   /**
@@ -80,30 +67,14 @@ class Manager {
   }
 
   /**
-   * @return \DeepCopy\DeepCopy
-   */
-  private function getCopier() {
-    if (!$this->copier) {
-      $this->copier = new DeepCopy();
-    }
-    return $this->copier;
-  }
-
-  /**
    * Queue this model up to be added to the database with flush().
    *
-   * @param $model
+   * @param $object
    */
   public function persist(BaseModel $object) {
-    // Get the unique hash of this $object
-    $obj_hash = spl_object_hash($object);
-
-    // Save it against the key (additional persist() calls with the same
-    // model will overwrite the previous changes.
-    $this->persisted_objects[$obj_hash] = [
-      'model' => $object,
-      'annotations' => Mapping::getMapper()->getProcessed(get_class($object))
-    ];
+    // Start tracking this object (because it is new, it will be tracked as
+    // something to be INSERTed)
+    $this->tracked[$object] = _OBJECT_NEW;
   }
 
   /**
@@ -112,31 +83,17 @@ class Manager {
    * @param \Symlink\ORM\Models\BaseModel $object
    */
   public function track(BaseModel $object) {
-    // Get the unique hash of this $object
-    $obj_hash = spl_object_hash($object);
-
-    // Save it against the key and store a clone of the last known state of
-    // the model in the database. This will be used to check changes when
-    // calling flush() later on.
-    $this->tracked_objects[$obj_hash] = [
-      'model' => $object,
-      'last_state' => $this->getCopier()->copy($object),
-      'annotations' => Mapping::getMapper()->getProcessed(get_class($object))
-    ];
-
+    // Save it against the key.
+    $this->tracked[$object] = _OBJECT_TRACKED;
   }
 
   /**
    * This model should be removed from the db when flush() is called.
+   *
    * @param $model
    */
-  public function remove(BaseModel $model) {
-
-    // Add/overwrite the DELETE entry.
-    $this->changes[$model->getUUID()] = [
-      'type' => ORM_PERSIST_DELETE,
-      'mode' => $model
-    ];
+  public function remove(BaseModel $object) {
+    unset($this->tracked[$object]);
   }
 
   /**
@@ -149,42 +106,36 @@ class Manager {
   private function _flush_insert() {
     global $wpdb;
 
-    $insert = [];
-
-    // Preprocess data for INSERTs (split queries - one per table).
-    foreach ($this->persisted_objects as $hash => $item) {
-
-      // Get the values from the schema.
-      $values = [];
-      foreach (array_keys($item['annotations']['schema']) as $fieldname) {
-        $insert[$item['annotations']['ORM_Table']]['values'][] = $item['model']->get($fieldname);
-      }
-
-      // Add to the combined insert object for this table.
-      $insert[$item['annotations']['ORM_Table']]['rows'] = '(' . implode(', ', array_keys($item['annotations']['schema'])) . ')';
-      $insert[$item['annotations']['ORM_Table']]['placeholder'][] = '(' . implode(', ', $item['annotations']['placeholder']) . ')';
-
-      // Remove from the persisted_objects and move to the tracked_objects.
-      unset($this->persisted_objects[$hash]);
-      $this->track($item['model']);
-    }
+    // Get a list of tables and columns that have data to update.
+    $insert = $this->tracked->getInsertTableData();
 
     // Process the INSERTs
     if (count($insert)) {
       // Build the combined query for table: $tablename
-      foreach ($insert as $tablename => $values) {
+      foreach ($insert as $classname => $values) {
 
-        $table_name = $wpdb->prefix . $tablename;
+        $table_name = $wpdb->prefix . $values['table_name'];
 
         // Build the placeholder SQL query.
         $sql = "INSERT INTO " . $table_name . "
-                  " . $values['rows'] . "
+                  (" . implode(", ", $values['columns']) . ")
               VALUES
-              " . implode(",
-              ", $values['placeholder']);
+              ";
+
+        while ($values['placeholders_count'] > 0) {
+          $sql .= "(" . implode(", ", $values['placeholders']) . ")";
+
+          if ($values['placeholders_count'] > 1) {
+            $sql .= ",
+            ";
+          }
+
+          $values['placeholders_count'] -= 1;
+        }
 
         // Insert using Wordpress prepare() which provides SQL injection protection (apparently).
-        $count = $wpdb->query($wpdb->prepare($sql, $values['values']));
+        $prepared = $wpdb->prepare($sql, $values['values']);
+        $count    = $wpdb->query($prepared);
 
         if (!$count) {
           throw new \Symlink\ORM\Exceptions\FailedToInsertException(__('Failed to insert one or more records into the database.'));
@@ -231,18 +182,22 @@ ON DUPLICATE KEY UPDATE
 
   }
 
+  /**
+   *
+   */
   private function _flush_delete() {
   }
 
   /**
    * Apply changes to all models queued up with persist().
    * Attempts to combine queries to reduce MySQL load.
+   *
    * @throws \Symlink\ORM\Exceptions\FailedToInsertException
    */
   public function flush() {
-    $this->_flush_update();   // UPDATE must come before INSERT.
+    //$this->_flush_update();   // UPDATE must come before INSERT.
     $this->_flush_insert();
-    $this->_flush_delete();
+    //$this->_flush_delete();
   }
 
 }

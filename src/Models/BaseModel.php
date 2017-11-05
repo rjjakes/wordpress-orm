@@ -2,6 +2,9 @@
 
 namespace Symlink\ORM\Models;
 
+use DeepCopy\DeepCopy;
+use Symlink\ORM\Mapping;
+
 abstract class BaseModel {
 
   /**
@@ -11,9 +14,13 @@ abstract class BaseModel {
   protected $ID;
 
   /**
-   * BaseModel constructor.
+   * Deep clone.
+   *
+   * @return mixed
    */
-  public function __construct() {
+  final public function __clone() {
+    $copier = new DeepCopy();
+    return $copier->copy($this);
   }
 
   /**
@@ -26,6 +33,37 @@ abstract class BaseModel {
   }
 
   /**
+   * @return mixed
+   */
+  public function getTableName() {
+    return Mapping::getMapper()->getProcessed(get_class($this))['ORM_Table'];
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getSchema() {
+    return Mapping::getMapper()->getProcessed(get_class($this))['schema'];
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getPlaceholders() {
+    return Mapping::getMapper()->getProcessed(get_class($this))['placeholder'];
+  }
+
+  /**
+   * Return unkeyed values from this object as per the schema (no ID).
+   * @return bool
+   */
+  public function getAllUnkeyedValues() {
+    return array_map(function ($key) {
+      return $this->get($key);
+    }, array_keys($this->getSchema()));
+  }
+
+  /**
    * Generic getter.
    *
    * @param $column
@@ -33,7 +71,7 @@ abstract class BaseModel {
    * @return mixed
    * @throws \Symlink\ORM\Exceptions\PropertyDoesNotExistException
    */
-  public function get($property) {
+  final public function get($property) {
     // Check to see if the property exists on the model.
     if (!property_exists($this, $property)) {
       throw new \Symlink\ORM\Exceptions\PropertyDoesNotExistException(sprintf(__('The property %s does not exist on the model %s.'), $property, get_class($this)));
@@ -52,7 +90,7 @@ abstract class BaseModel {
    * @return bool
    * @throws \Symlink\ORM\Exceptions\PropertyDoesNotExistException
    */
-  public function set($column, $value) {
+  final public function set($column, $value) {
     // Check to see if the property exists on the model.
     if (!property_exists($this, $column)) {
       throw new \Symlink\ORM\Exceptions\PropertyDoesNotExistException(sprintf(__('The property does not exist on the model %s.'), get_class($this)));

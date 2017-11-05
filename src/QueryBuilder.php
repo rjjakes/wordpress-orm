@@ -132,6 +132,8 @@ class QueryBuilder {
   /**
    * Build the query and process through $wpdb->prepare().
    * @return $this
+   *
+   * @todo - unit tests
    */
   public function buildQuery() {
     global $wpdb;
