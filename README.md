@@ -1,6 +1,6 @@
 # WORM (Wordpress ORM)
 
-*Under active development/non functional*
+*Under active development*
 
 A lightweight, Doctrine style ORM for Wordpress 4.8+. Requires PHP 5.5+
 
@@ -355,6 +355,12 @@ The exceptions are as follows.
 ```php
 AllowSchemaUpdateIsFalseException
 FailedToInsertException
+InvalidOperatorException
+NoQueryException
+PropertyDoesNotExistException
+RepositoryClassNotDefinedException
+RequiredAnnotationMissingException
+UnknownColumnTypeException
 ```
 
 
@@ -362,12 +368,6 @@ FailedToInsertException
 
 @todo
 
-Wordpress ORM comes with some built-in models that map to default Wordpress tables. 
-
-```php
-Symlink\Models\Post
-Symlink\Models\User
-```
 
 ## Dependencies 
 
