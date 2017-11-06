@@ -112,6 +112,7 @@ Use the mapper class:
 use Symlink\ORM\Mapping;
 ```
 
+
 First, get an instance of the ORM mapper object. This static function below makes sure `new Mapping()` is called once
 per request. Any subsequent calls to `::getMapper()` will return the same object. This means you don't need to
 continually create a new instance of Mapper() and parse the annotations.     
@@ -322,7 +323,29 @@ $orm->flush();
 
 ### Dropping model tables from the database.
 
-@todo
+It's good practice for your plugin to clean up any data it has created when the user uninstalls. With that in mind, the
+ORM has a method for removing previously created tables. If you have created any custom models, you should use this 
+function as part of your uninstall hook.  
+
+Use the mapper class:
+
+```php
+use Symlink\ORM\Mapping;
+```
+
+
+First, get an instance of the ORM mapper object.    
+
+```php
+$mapper = Mapping::getMapper();
+```
+
+Now pass the model classname to dropTable() like this:
+
+```php
+$mapper->dropTable(Product::class);
+```
+
 
 ### Create a custom repository
 

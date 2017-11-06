@@ -224,4 +224,16 @@ class Mapping {
     dbDelta($sql);
   }
 
+  public function dropTable($classname) {
+    global $wpdb;
+
+    // Get the model annotation data.
+    $mapped = $this->getProcessed($classname);
+
+    // Drop the table.
+    $table_name = $wpdb->prefix . $mapped['ORM_Table'];
+    $sql = "DROP TABLE IF EXISTS " . $table_name;
+    $wpdb->query($sql);
+  }
+
 }
