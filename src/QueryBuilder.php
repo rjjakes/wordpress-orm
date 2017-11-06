@@ -65,7 +65,8 @@ class QueryBuilder {
       '>=',
       'IN',
       'NOT IN'
-      ])) {
+    ])
+    ) {
       throw new \Symlink\ORM\Exceptions\InvalidOperatorException(sprintf(__('Operator %s is not valid.'), $operator));
     }
 
@@ -75,7 +76,7 @@ class QueryBuilder {
       'operator' => $operator,
       'value' => $value,
       'placeholder' => $this->repository->getObjectPropertyPlaceholders()[$property]
-      ];
+    ];
 
     return $this;
   }
@@ -100,7 +101,8 @@ class QueryBuilder {
     if (!in_array($operator, [
       'ASC',
       'DESC',
-    ])) {
+    ])
+    ) {
       throw new \Symlink\ORM\Exceptions\InvalidOperatorException(sprintf(__('Operator %s is not valid.'), $operator));
     }
 
@@ -132,8 +134,6 @@ class QueryBuilder {
   /**
    * Build the query and process through $wpdb->prepare().
    * @return $this
-   *
-   * @todo - unit tests
    */
   public function buildQuery() {
     global $wpdb;
@@ -144,7 +144,7 @@ class QueryBuilder {
     ";
 
     // Combine the WHERE clauses and add to the SQL statement.
-    if (count($this->where))  {
+    if (count($this->where)) {
       $sql .= "WHERE
       ";
 
@@ -161,7 +161,7 @@ class QueryBuilder {
         else {
           // Fail silently.
           if (is_array($where['value'])) {
-            $combined_where[] = $where['property'] . " " . $where['operator'] . " (" . implode(", ", array_pad([], count($where['value']),  $where['placeholder'])) . ")
+            $combined_where[] = $where['property'] . " " . $where['operator'] . " (" . implode(", ", array_pad([], count($where['value']), $where['placeholder'])) . ")
           ";
 
             $values = array_merge($values, $where['value']);
@@ -184,7 +184,6 @@ class QueryBuilder {
 
     // Save it.
     $this->query = $wpdb->prepare($sql, $values);
-
     return $this;
   }
 
@@ -201,42 +200,41 @@ class QueryBuilder {
 
     if ($this->query) {
 
-      // Get the results from the db.
-      if ($results = $wpdb->get_results($this->query)) {
+      // Classname for this repository.
+      $object_classname = $this->repository->getObjectClass();
 
-        // Build the array of objects.
-        $objects = [];
-        $object_classname = $this->repository->getObjectClass();
+      // Loop through the database results, building the objects.
+      $objects = array_map(function ($result) use(&$object_classname) {
 
-        foreach ($results as $result) {
-          // Create a new blank object.
-          $object = new $object_classname();
+        // Create a new blank object.
+        $object = new $object_classname();
 
-          // Fill in all the properties.
-          array_walk($result, function ($value, $property) use (&$object) {
-            $object->set($property, $value);
-          });
+        // Fill in all the properties.
+        array_walk($result, function ($value, $property) use (&$object) {
+          $object->set($property, $value);
+        });
 
-          // Track the object.
-          $em = Manager::getManager();
-          $em->track($object);
+        // Track the object.
+        $em = Manager::getManager();
+        $em->track($object);
 
-          // Save it.
-          $objects[] = $object;
-        }
+        // Save it.
+        return $object;
+      }, $wpdb->get_results($this->query));
 
-        // Return just an object if there was only one result.
-        if (count($objects) == 1 && !$always_array) {
-          return $objects[0];
-        }
-
-        // Otherwise, the return an array of objects.
-        return $objects;
-      }
-      else {
-        // If there were no results.
+      // There were no results.
+      if (!count($objects)) {
         return FALSE;
       }
+
+      // Return just an object if there was only one result.
+      if (count($objects) == 1 && !$always_array) {
+        return $objects[0];
+      }
+
+      // Otherwise, the return an array of objects.
+      return $objects;
+
     }
     else {
       throw new \Symlink\ORM\Exceptions\NoQueryException(__('No query was built. Run ->buildQuery() first.'));

@@ -83,6 +83,24 @@ abstract class BaseModel {
   }
 
   /**
+   * Get multiple values from this object given an array of properties.
+   *
+   * @param $columns
+   * @return array
+   */
+  final public function getMultiple($columns) {
+    $results = [];
+
+    if (is_array($columns)) {
+      foreach ($columns as $column) {
+        $results[$column] = $this->get($column);
+      }
+    }
+
+    return $results;
+  }
+
+  /**
    * Generic setter.
    *
    * @param $column

@@ -107,7 +107,7 @@ class Manager {
     global $wpdb;
 
     // Get a list of tables and columns that have data to insert.
-    $insert = $this->tracked->getInsertTableData();
+    $insert = $this->tracked->getInsertUpdateTableData('getPersistedObjects');
 
     // Process the INSERTs
     if (count($insert)) {
@@ -163,23 +163,58 @@ class Manager {
   private function _flush_update() {
     global $wpdb;
 
-    $update = [];
-
     // Get a list of tables and columns that have data to update.
-    $insert = $this->tracked->getUpdateTableData();
+    $update = $this->tracked->getInsertUpdateTableData('getChangedObjects');
 
+    // Process the INSERTs
+    if (count($update)) {
+      // Build the combined query for table: $tablename
+      foreach ($update as $classname => $values) {
 
-    /*
-INSERT INTO table (id, Col1, Col2)
-    VALUES
-    (1,1,1),
-    (2,2,3),
-    (3,9,3),
-    (4,10,12)
-ON DUPLICATE KEY UPDATE
-    Col1=VALUES(Col1), Col2=VALUES(Col2);
-     */
+        $table_name = $wpdb->prefix . $values['table_name'];
 
+        $sql = "INSERT INTO " . $table_name . " (ID, " . implode(", ", $values['columns']) . ")
+          VALUES
+          ";
+
+        while ($values['placeholders_count'] > 0) {
+          $sql .= "(%d, " . implode(", ", $values['placeholders']) . ")";
+
+          if ($values['placeholders_count'] > 1) {
+            $sql .= ",
+            ";
+          }
+
+          $values['placeholders_count'] -= 1;
+        }
+
+        $sql .= "
+        ON DUPLICATE KEY UPDATE
+        ";
+
+        $update_set = [];
+        foreach ($values['columns'] as $column) {
+          $update_set[] = $column . "=VALUES(" . $column . ")";
+        }
+        $sql .= implode(", ", $update_set) . ";";
+
+        // Insert using Wordpress prepare() which provides SQL injection protection (apparently).
+        $prepared = $wpdb->prepare($sql, $values['values']);
+        $count    = $wpdb->query($prepared);
+
+        // Start tracking all the added objects.
+        if ($count) {
+          array_walk($values['objects'], function ($object) {
+            $this->track($object);
+          });
+        }
+        // Something went wrong.
+        else {
+          throw new \Symlink\ORM\Exceptions\FailedToInsertException(__('Failed to update one or more records in the database.'));
+        }
+
+      }
+    }
   }
 
   /**
@@ -195,7 +230,7 @@ ON DUPLICATE KEY UPDATE
    * @throws \Symlink\ORM\Exceptions\FailedToInsertException
    */
   public function flush() {
-    $this->_flush_update();   // UPDATE must come before INSERT.
+    $this->_flush_update();
     $this->_flush_insert();
     $this->_flush_delete();
   }

@@ -37,74 +37,49 @@ class TrackedCollection implements \ArrayAccess {
   }
 
   /**
-   * Get data used to INSERT new objects into the database.
+   * Get data used to INSERT/UPDATE objects in the database.
    *
+   * @param $iterator
    * @return array
    */
-  public function getInsertTableData() {
+  public function getInsertUpdateTableData($iterator) {
     $data = [];
 
     // Get the structural data.
-    foreach ($this->list as $item) {
-      // Only items with no 'last_state'.
-      if (isset($item['model']) && !isset($item['last_state'])) {
+    foreach ($this->$iterator() as $item) {
 
-        // Add the table name and schema data (only once).
-        if (!isset($data[get_class($item['model'])])) {
-          $data[get_class($item['model'])] = [
-            'objects'            => [],
-            'table_name'         => $item['model']->getTableName(),
-            'columns'            => array_keys($item['model']->getSchema()),
-            'placeholders'       => $item['model']->getPlaceholders(),
-            'placeholders_count' => 0,
-            'values'             => [],
-          ];
-        }
-
-        // Store the object.
-        $data[get_class($item['model'])]['objects'][] = $item['model'];
-
-        // Now add the placeholder and row data.
-        $data[get_class($item['model'])]['placeholders_count'] += 1;
-        $data[get_class($item['model'])]['values'] = array_merge($data[get_class($item['model'])]['values'], $item['model']->getAllUnkeyedValues());
+      // Add the table name and schema data (only once).
+      if (!isset($data[get_class($item['model'])])) {
+        $data[get_class($item['model'])] = [
+          'objects' => [],
+          'table_name' => $item['model']->getTableName(),
+          'columns' => array_keys($item['model']->getSchema()),
+          'placeholders' => $item['model']->getPlaceholders(),
+          'placeholders_count' => 0,
+          'values' => [],
+        ];
       }
-    }
 
-    return $data;
-  }
+      // Store the object.
+      $data[get_class($item['model'])]['objects'][] = $item['model'];
 
-  /**
-   * Get data used to INSERT new objects into the database.
-   *
-   * @return array
-   */
-  public function getUpdateTableData() {
-    $data = [];
+      // Now add the placeholder and row data.
+      $data[get_class($item['model'])]['placeholders_count'] += 1;
 
-    // Get the structural data.
-    foreach ($this->list as $item) {
-      // Only items with 'model' and 'last_state'.
-      if (isset($item['model']) && isset($item['last_state']) && $item['model'] !== $item['last_state']) {
-
-        $x = array_diff(
-          $item['model']->getAllValues(),
-          $item['last_state']->getAllValues()
+      if ($iterator === 'getPersistedObjects') {
+        $data[get_class($item['model'])]['values'] = array_merge(
+          $data[get_class($item['model'])]['values'],
+          $item['model']->getAllUnkeyedValues()
         );
-
+      }
+      else {
+        $data[get_class($item['model'])]['values'] = array_merge(
+          $data[get_class($item['model'])]['values'],
+          [$item['model']->getID()],
+          $item['model']->getAllUnkeyedValues()
+        );
       }
     }
-
-    /*
-INSERT INTO table (id, Col1, Col2)
-  VALUES
-    (1,1,1),
-    (2,2,3),
-    (3,9,3),
-    (4,10,12)
-ON DUPLICATE KEY UPDATE
-Col1=VALUES(Col1), Col2=VALUES(Col2);
- */
-
 
     return $data;
   }
@@ -127,11 +102,13 @@ Col1=VALUES(Col1), Col2=VALUES(Col2);
       ];
     }
     // If existing, objects will have a 'model'and a 'last_state'
-    else if ($state == _OBJECT_TRACKED) {
-      $this->list[$obj_hash] = [
-        'model'      => $object,
-        'last_state' => $this->copier->copy($object)
-      ];
+    else {
+      if ($state == _OBJECT_TRACKED) {
+        $this->list[$obj_hash] = [
+          'model' => $object,
+          'last_state' => $this->copier->copy($object)
+        ];
+      }
     }
   }
 
@@ -185,27 +162,33 @@ Col1=VALUES(Col1), Col2=VALUES(Col2);
    * Return an array of the objects to be INSERTed.
    */
   public function getPersistedObjects() {
-    $persisted_list = [];
-
-    foreach ($this->list as $object) {
+    foreach ($this->list as $item) {
       if (isset($item['model']) && !isset($item['last_state'])) {
-        $persisted_list[] = $item['model'];
+        yield $item;
       }
     }
-
-    return $persisted_list;
   }
 
   /**
-   * Return an array of the objects to be UPDATEd
+   * Return an array of the objects to be UPDATEd and the changed properties.
    */
   public function getChangedObjects() {
+    foreach ($this->list as $item) {
+      if (isset($item['model']) && isset($item['last_state']) && $item['model'] !== $item['last_state']) {
+        yield $item;
+      }
+    }
   }
 
   /**
    * Return an array of the objects to be DELETEd.
    */
   public function getRemovedObjects() {
+    foreach ($this->list as $item) {
+      if (!isset($item['model']) && isset($item['last_state'])) {
+        yield $item['model'];
+      }
+    }
   }
 
 }

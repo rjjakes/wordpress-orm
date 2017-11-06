@@ -284,11 +284,41 @@ instead of `BaseRepository`. That is covered in the section below called: *Creat
 
 ### Saving modified objects back to the database
 
-@todo
+To modify an object, load the object from the database modfiy one or more of it's values, call `flush()` to apply the
+changes back to the database.
+ 
+For example:
+ 
+ ```php
+$orm = Manager::getManager();
+$repository = $orm->getRepository(Product::class);
+
+$product = $repository->find(9);   // Load an object by known ID=9
+$product->set('title', 'TITLE HAS CHANGED!');
+
+$orm->flush();
+```
+
+This works because whenever an object is persisted ot loaded from the database, Wordpres ORM tracks any changes made to
+the model data. `flush()` syncronizes the differences made since the load (or last `flush()`). 
 
 ### Deleting objects from the database
 
-@todo
+To remove an object from the database, load an object from the database and pass it to the `remove()` method on the
+manager class. Then call `flush()` to syncronize the database. 
+
+For example:
+
+```php
+$orm = Manager::getManager();
+$repository = $orm->getRepository(Product::class);
+
+$product = $repository->find(9);   // Load an object by known ID=9
+
+$orm->remove($product);   // Queue up the object to be removed from the database. 
+
+$orm->flush();
+```
 
 ### Dropping model tables from the database.
 
