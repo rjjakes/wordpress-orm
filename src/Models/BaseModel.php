@@ -13,12 +13,31 @@ abstract class BaseModel {
   protected $ID;
 
   /**
+   * @var
+   */
+  private $hash;
+
+  /**
+   * BaseModel constructor.
+   */
+  public function __construct() {
+    $this->hash = spl_object_hash($this);
+  }
+
+  /**
    * Getter.
    *
    * @return string
    */
   public function getId() {
     return $this->ID;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getHash() {
+    return $this->hash;
   }
 
   /**

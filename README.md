@@ -143,11 +143,11 @@ use Symlink\ORM\Manager;
 Create a new instance of your model:
 
 ```php
-$campaign = new Product();
-$campaign->set('title', 'Some title');
-$campaign->set('time', '2017-11-03 10:04:02');
-$campaign->set('views', 34);
-$campaign->set('short_name', 'something_here');
+$product = new Product();
+$product->set('title', 'Some title');
+$product->set('time', '2017-11-03 10:04:02');
+$product->set('views', 34);
+$product->set('short_name', 'something_here');
 ```
 
 Get an instance of the ORM manager class. Like the Mapping class, this static function returns
@@ -163,7 +163,7 @@ ready to apply them, the ORM will combine these changes into single SQL queries 
 number of calls made to the database. 
 
 ```php
-$orm->persist($campaign);
+$orm->persist($product);
 ```
 
 Once, you're ready to apply all changes to your database (syncing what you have persisted to the database), call

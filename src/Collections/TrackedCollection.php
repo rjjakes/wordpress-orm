@@ -6,6 +6,7 @@ use DeepCopy\DeepCopy;
 
 define('_OBJECT_NEW', 1);
 define('_OBJECT_TRACKED', 2);
+define('_OBJECT_CLEAN', -1);
 
 /**
  * Class TrackedCollection
@@ -85,31 +86,58 @@ class TrackedCollection implements \ArrayAccess {
   }
 
   /**
+   * @return array
+   */
+  public function getRemoveTableData() {
+    $data = [];
+
+
+    foreach ($this->getRemovedObjects() as $item) {
+
+      if (!isset($data[get_class($item['last_state'])])) {
+        $data[get_class($item['last_state'])] = [
+          'objects' => [],
+          'table_name' => $item['last_state']->getTableName(),
+          'values' => [],
+        ];
+      }
+
+      $data[get_class($item['last_state'])]['objects'][] = $item['last_state'];
+      $data[get_class($item['last_state'])]['values'][] = $item['last_state']->getId();
+
+    }
+
+    return $data;
+  }
+
+  /**
    * @param mixed $object
    * @param mixed $state
    */
   public function offsetSet($object, $state) {
 
-    // 'annotations' => Mapping::getMapper()->getProcessed(get_class($object))
+    switch ($state) {
+      // If new, objects will have a 'model' but no 'last_state',
+      case _OBJECT_NEW:
+        $this->list[$object->getHash()] = [
+          'model' => $object,
+        ];
+        break;
 
-    // Get the object hash to use as the key.
-    $obj_hash = spl_object_hash($object);
-
-    // If new, objects will have a 'model' but no 'last_state',
-    if ($state == _OBJECT_NEW) {
-      $this->list[$obj_hash] = [
-        'model' => $object,
-      ];
-    }
-    // If existing, objects will have a 'model'and a 'last_state'
-    else {
-      if ($state == _OBJECT_TRACKED) {
-        $this->list[$obj_hash] = [
+      // If new, objects will have both a 'model' and a 'last_state',
+      case _OBJECT_TRACKED:
+        $this->list[$object->getHash()] = [
           'model' => $object,
           'last_state' => $this->copier->copy($object)
         ];
-      }
+        break;
+
+      // Clean an object out of the $list
+      case _OBJECT_CLEAN:
+        unset($this->list[$object->getHash()]);
+        break;
     }
+
   }
 
   /**
@@ -118,7 +146,7 @@ class TrackedCollection implements \ArrayAccess {
    * @return bool
    */
   public function offsetExists($object) {
-    return isset($this->list[spl_object_hash($object)]);
+    return isset($this->list[$object->getHash()]);
   }
 
   /**
@@ -129,18 +157,15 @@ class TrackedCollection implements \ArrayAccess {
    */
   public function offsetUnset($object) {
 
-    // Get the object hash to use as the key.
-    $obj_hash = spl_object_hash($object);
-
     // If the object exists in the list.
-    if (isset($this->list[$obj_hash])) {
+    if (isset($this->list[$object->getHash()])) {
 
       // If a new object (without a last_state) is being deleted, just delete the entire object.
-      if (!isset($this->list[$obj_hash]['last_state'])) {
-        unset($this->list[$obj_hash]);
+      if (!isset($this->list[$object->getHash()]['last_state'])) {
+        unset($this->list[$object->getHash()]);
       }
       else {
-        unset($this->list[$obj_hash]['model']);
+        unset($this->list[$object->getHash()]['model']);
       }
     }
 
@@ -152,10 +177,11 @@ class TrackedCollection implements \ArrayAccess {
    * @return mixed|null
    */
   public function offsetGet($object) {
-    // Get the object hash to use as the key.
-    $obj_hash = spl_object_hash($object);
+    return isset($this->list[$object->getHash()]) ? $this->list[$object->getHash()]['model'] : NULL;
+  }
 
-    return isset($this->list[$obj_hash]) ? $this->list[$obj_hash]['model'] : NULL;
+  public function removeFromCollection($obj_hash) {
+    $this->list[$obj_hash] = [];
   }
 
   /**
@@ -174,7 +200,7 @@ class TrackedCollection implements \ArrayAccess {
    */
   public function getChangedObjects() {
     foreach ($this->list as $item) {
-      if (isset($item['model']) && isset($item['last_state']) && $item['model'] !== $item['last_state']) {
+      if (isset($item['model']) && isset($item['last_state']) && $item['model'] != $item['last_state']) {
         yield $item;
       }
     }
@@ -186,7 +212,7 @@ class TrackedCollection implements \ArrayAccess {
   public function getRemovedObjects() {
     foreach ($this->list as $item) {
       if (!isset($item['model']) && isset($item['last_state'])) {
-        yield $item['model'];
+        yield $item;
       }
     }
   }

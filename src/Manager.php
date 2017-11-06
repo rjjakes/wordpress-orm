@@ -97,6 +97,16 @@ class Manager {
   }
 
   /**
+   * Start tracking a model known to exist in the database.
+   *
+   * @param \Symlink\ORM\Models\BaseModel $object
+   */
+  public function clean(BaseModel $object) {
+    // Save it against the key.
+    $this->tracked[$object] = _OBJECT_CLEAN;
+  }
+
+  /**
    * Add new objects to the database.
    * This will perform one query per table no matter how many records need to
    * be added.
@@ -135,7 +145,7 @@ class Manager {
 
         // Insert using Wordpress prepare() which provides SQL injection protection (apparently).
         $prepared = $wpdb->prepare($sql, $values['values']);
-        $count    = $wpdb->query($prepared);
+        $count = $wpdb->query($prepared);
 
         // Start tracking all the added objects.
         if ($count) {
@@ -200,7 +210,8 @@ class Manager {
 
         // Insert using Wordpress prepare() which provides SQL injection protection (apparently).
         $prepared = $wpdb->prepare($sql, $values['values']);
-        $count    = $wpdb->query($prepared);
+
+        $count = $wpdb->query($prepared);
 
         // Start tracking all the added objects.
         if ($count) {
@@ -221,6 +232,33 @@ class Manager {
    *
    */
   private function _flush_delete() {
+
+    global $wpdb;
+
+    // Get a list of tables and columns that have data to update.
+    $update = $this->tracked->getRemoveTableData();
+
+    // Process the INSERTs
+    if (count($update)) {
+      // Build the combined query for table: $tablename
+      foreach ($update as $classname => $values) {
+
+        $table_name = $wpdb->prefix . $values['table_name'];
+
+        // Build the SQL.
+        $sql = "DELETE FROM " . $table_name . " WHERE ID IN (" . implode(", ", array_fill(0, count($values['values']), "%d")) . ");";
+
+        // Process all deletes for a particular table together as a single query.
+        $prepared = $wpdb->prepare($sql, $values['values']);
+        $count = $wpdb->query($prepared);
+
+        // Really remove the object from the tracking list.
+        foreach ($values['objects'] as $obj_hash => $object) {
+          $this->clean($object);
+        }
+      }
+    }
+
   }
 
   /**
