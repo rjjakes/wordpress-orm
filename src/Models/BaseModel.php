@@ -25,6 +25,19 @@ abstract class BaseModel {
   }
 
   /**
+   * Performa  manual clone of this object.
+   */
+  public function __clone() {
+    $class_name = get_class($this);
+    $object = new $class_name;
+    $schema = Mapping::getMapper()->getProcessed($class_name)['schema'];
+
+    foreach (array_keys($schema) as $property) {
+      $object->set($property, $this->get($property));
+    }
+  }
+
+  /**
    * Getter.
    *
    * @return string

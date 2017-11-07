@@ -2,8 +2,6 @@
 
 namespace Symlink\ORM\Collections;
 
-use DeepCopy\DeepCopy;
-
 define('_OBJECT_NEW', 1);
 define('_OBJECT_TRACKED', 2);
 define('_OBJECT_CLEAN', -1);
@@ -24,17 +22,10 @@ class TrackedCollection implements \ArrayAccess {
   private $list;
 
   /**
-   * @var
-   */
-  private $copier;
-
-
-  /**
    * TrackedCollection constructor.
    */
   public function __construct() {
     $this->list = [];
-    $this->copier = new DeepCopy();
   }
 
   /**
@@ -128,7 +119,7 @@ class TrackedCollection implements \ArrayAccess {
       case _OBJECT_TRACKED:
         $this->list[$object->getHash()] = [
           'model' => $object,
-          'last_state' => $this->copier->copy($object)
+          'last_state' => clone $object
         ];
         break;
 

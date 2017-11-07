@@ -60,7 +60,6 @@ class Mapping {
    * @param $classname
    *
    * @return mixed
-   * @throws \Symlink\ORM\Exceptions\NoModelPropertiesException
    * @throws \Symlink\ORM\Exceptions\RepositoryClassNotDefinedException
    * @throws \Symlink\ORM\Exceptions\RequiredAnnotationMissingException
    * @throws \Symlink\ORM\Exceptions\UnknownColumnTypeException
@@ -132,6 +131,7 @@ class Mapping {
             'datetime',
             'tinyint',
             'smallint',
+            'int',
             'bigint',
             'varchar',
             'tinytext',
@@ -141,7 +141,7 @@ class Mapping {
             'float',
           ])
           ) {
-            throw new \Symlink\ORM\Exceptions\UnknownColumnTypeException(sprintf(__('Unknown model property column type set in @ORM_Column_Type on model %s..'), $classname));
+            throw new \Symlink\ORM\Exceptions\UnknownColumnTypeException(sprintf(__('Unknown model property column type %s set in @ORM_Column_Type on model %s..'), $column_type, $classname));
           }
 
           // Build the rest of the schema partial.
@@ -206,7 +206,7 @@ class Mapping {
 
     // Create an ID type string.
     $id_type        = 'ID';
-    $id_type_string = 'ID mediumint(9) NOT NULL AUTO_INCREMENT';
+    $id_type_string = 'ID bigint(20) NOT NULL AUTO_INCREMENT';
 
     // Build the SQL CREATE TABLE command for use with dbDelta.
     $table_name = $wpdb->prefix . $mapped['ORM_Table'];
@@ -229,6 +229,11 @@ class Mapping {
 
     // Get the model annotation data.
     $mapped = $this->getProcessed($classname);
+
+    // Are we allowed to update the schema of this model in the db?
+    if (!$mapped['ORM_AllowSchemaUpdate']) {
+      throw new \Symlink\ORM\Exceptions\AllowSchemaUpdateIsFalseException(sprintf(__('Refused to drop table for model %s. ORM_AllowSchemaUpdate is FALSE.'), $classname));
+    }
 
     // Drop the table.
     $table_name = $wpdb->prefix . $mapped['ORM_Table'];

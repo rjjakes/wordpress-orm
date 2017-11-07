@@ -5,8 +5,7 @@
   "homepage": "https://github.com/rjjakes/wordpress-orm",
   "require": {
     "php": ">=5.5",
-    "minime/annotations": "^3.1",
-    "myclabs/deep-copy": "1.6.1"
+    "minime/annotations": "^3.1"
   },
   "license": "MIT",
   "authors": [
