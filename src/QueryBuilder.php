@@ -51,7 +51,7 @@ class QueryBuilder {
   public function where($property, $value, $operator) {
 
     // Check the property exists.
-    if (!in_array($property, $this->repository->getObjectProperties())) {
+    if (!in_array($property, $this->repository->getObjectProperties()) && $property != 'ID') {
       throw new \Symlink\ORM\Exceptions\PropertyDoesNotExistException(sprintf(__('Property %s does not exist in model %s.'), $property, $this->repository->getObjectClass()));
     }
 
@@ -92,8 +92,9 @@ class QueryBuilder {
    * @throws \Symlink\ORM\Exceptions\PropertyDoesNotExistException
    */
   public function orderBy($property, $operator) {
+
     // Check the property exists.
-    if (!in_array($property, $this->repository->getObjectProperties())) {
+    if (!in_array($property, $this->repository->getObjectProperties()) && $property != 'ID') {
       throw new \Symlink\ORM\Exceptions\PropertyDoesNotExistException(sprintf(__('Property %s does not exist in model %s.'), $property, $this->repository->getObjectClass()));
     }
 

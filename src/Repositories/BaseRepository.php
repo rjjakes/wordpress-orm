@@ -89,10 +89,10 @@ class BaseRepository {
    */
   public function find($id) {
     return $this->createQueryBuilder()
-                 ->where('id', $id, '=')
-                 ->orderBy('id', 'ASC')
-                 ->buildQuery()
-                 ->getResults();
+      ->where('ID', $id, '=')
+      ->orderBy('ID', 'ASC')
+      ->buildQuery()
+      ->getResults();
   }
 
   /**
@@ -102,9 +102,9 @@ class BaseRepository {
    */
   public function findAll() {
     return $this->createQueryBuilder()
-                ->orderBy('id', 'ASC')
-                ->buildQuery()
-                ->getResults();
+      ->orderBy('ID', 'ASC')
+      ->buildQuery()
+      ->getResults();
   }
 
   /**
@@ -117,10 +117,10 @@ class BaseRepository {
    */
   public function findBy($property, $value) {
     return $this->createQueryBuilder()
-                ->where($property, $value, '=')
-                ->orderBy('id', 'ASC')
-                ->buildQuery()
-                ->getResults();
+      ->where($property, $value, '=')
+      ->orderBy('ID', 'ASC')
+      ->buildQuery()
+      ->getResults();
   }
 
 }

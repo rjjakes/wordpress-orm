@@ -7,9 +7,8 @@ use Symlink\ORM\Models\BaseModel as Model;
 
 /**
  * @ORM_Type Entity
- * @ORM_Table "posts"
+ * @ORM_Table "postmeta"
  * @ORM_AllowSchemaUpdate False
- * @ORM_Repository \Symlink\ORM\Repositories\PostsRepository
  */
 class Posts extends Model {
 

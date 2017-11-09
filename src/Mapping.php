@@ -55,6 +55,19 @@ class Mapping {
   }
 
   /**
+   * @param $classname
+   * @param $property
+   * @return \Minime\Annotations\Interfaces\AnnotationsBagInterface
+   */
+  public function getPropertyAnnotationValue($classname, $property, $key) {
+    // Get the annotations.
+    $annotations = $this->getReader()->getPropertyAnnotations($classname, $property);
+
+    // Return the key we want from this list of property annotations.
+    return $annotations->get($key);
+  }
+
+  /**
    * Process the class annotations, adding an entry the $this->models array.
    *
    * @param $classname

@@ -2,6 +2,7 @@
 
 namespace Symlink\ORM\Models;
 
+use Symlink\ORM\Manager;
 use Symlink\ORM\Mapping;
 
 abstract class BaseModel {
@@ -97,9 +98,22 @@ abstract class BaseModel {
   }
 
   /**
+   * Get the raw, underlying value of a property (don't perform a JOIN or lazy
+   * loaded database query).
+   *
+   * @param $property
+   *
+   * @return mixed
+   * @throws \Symlink\ORM\Exceptions\PropertyDoesNotExistException
+   */
+  final public function getDBValue($property) {
+    return $this->get($property);
+  }
+
+  /**
    * Generic getter.
    *
-   * @param $column
+   * @param $property
    *
    * @return mixed
    * @throws \Symlink\ORM\Exceptions\PropertyDoesNotExistException
@@ -108,6 +122,27 @@ abstract class BaseModel {
     // Check to see if the property exists on the model.
     if (!property_exists($this, $property)) {
       throw new \Symlink\ORM\Exceptions\PropertyDoesNotExistException(sprintf(__('The property %s does not exist on the model %s.'), $property, get_class($this)));
+    }
+
+    // If this property is a ManyToOne, check to see if it's an object and lazy
+    // load it if not.
+    $many_to_one_class = Mapping::getMapper()->getPropertyAnnotationValue(get_class($this), $property, 'ORM_ManyToOne');
+    $many_to_one_property = Mapping::getMapper()->getPropertyAnnotationValue(get_class($this), $property, 'ORM_JoinProperty');
+
+    if ($many_to_one_class && $many_to_one_property && !is_object($this->$property)) {
+      // Lazy load.
+      $orm = Manager::getManager();
+      $object_repository = $orm->getRepository($many_to_one_class);
+
+      //print $many_to_one_property . "\n\n";
+      //print_r($object_repository);
+      //exit;
+
+      $object = $object_repository->findBy($many_to_one_property, $this->$property);
+
+      print 'object';
+      print_r($object);
+      exit;
     }
 
     // Return the value of the field.
@@ -144,7 +179,7 @@ abstract class BaseModel {
   final public function set($column, $value) {
     // Check to see if the property exists on the model.
     if (!property_exists($this, $column)) {
-      throw new \Symlink\ORM\Exceptions\PropertyDoesNotExistException(sprintf(__('The property does not exist on the model %s.'), get_class($this)));
+      throw new \Symlink\ORM\Exceptions\PropertyDoesNotExistException(sprintf(__('The property %s does not exist on the model %s.'), $column, get_class($this)));
     }
 
     // Update the model with the value.
