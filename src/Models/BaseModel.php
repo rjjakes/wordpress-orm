@@ -134,15 +134,11 @@ abstract class BaseModel {
       $orm = Manager::getManager();
       $object_repository = $orm->getRepository($many_to_one_class);
 
-      //print $many_to_one_property . "\n\n";
-      //print_r($object_repository);
-      //exit;
+      $object = $object_repository->findBy([$many_to_one_property => $this->$property]);
 
-      $object = $object_repository->findBy($many_to_one_property, $this->$property);
-
-      print 'object';
-      print_r($object);
-      exit;
+      if ($object) {
+        $this->$property = $object;
+      }
     }
 
     // Return the value of the field.

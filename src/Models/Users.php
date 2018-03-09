@@ -9,7 +9,7 @@ use Symlink\ORM\Models\BaseModel as Model;
  * @ORM_Type Entity
  * @ORM_Table "users"
  * @ORM_AllowSchemaUpdate False
- * @ORM_Repository \Symlink\ORM\Repositories\PostsRepository
+ * @ORM_Repository \Symlink\ORM\Repositories\UsersRepository
  */
 class Users extends Model {
 
