@@ -64,7 +64,7 @@ class BaseRepository {
    */
   public function getObjectProperties() {
     return array_merge(
-      ['id'],
+      ['ID'],
       array_keys($this->annotations['schema'])
     );
   }
@@ -75,7 +75,7 @@ class BaseRepository {
    */
   public function getObjectPropertyPlaceholders() {
     return array_merge(
-      ['id' => '%d'],
+      ['ID' => '%d'],
       $this->annotations['placeholder']
     );
   }
@@ -110,15 +110,16 @@ class BaseRepository {
   /**
    * Returns all objects with matching property value.
    *
-   * @param $property
-   * @param $value
+   * @param array $criteria
    *
-   * @return array|bool|mixed
+   * @return array
    */
-  public function findBy($property, $value) {
-    return $this->createQueryBuilder()
-      ->where($property, $value, '=')
-      ->orderBy('ID', 'ASC')
+  public function findBy(array $criteria) {
+    $qb = $this->createQueryBuilder();
+    foreach ($criteria as $property => $value) {
+      $qb->where($property, $value, '=');
+    }
+    $qb->orderBy('ID', 'ASC')
       ->buildQuery()
       ->getResults();
   }

@@ -127,6 +127,7 @@ abstract class BaseModel {
     // If this property is a ManyToOne, check to see if it's an object and lazy
     // load it if not.
     $many_to_one_class = Mapping::getMapper()->getPropertyAnnotationValue(get_class($this), $property, 'ORM_ManyToOne');
+    /** @var string $many_to_one_property */
     $many_to_one_property = Mapping::getMapper()->getPropertyAnnotationValue(get_class($this), $property, 'ORM_JoinProperty');
 
     if ($many_to_one_class && $many_to_one_property && !is_object($this->$property)) {
@@ -134,15 +135,11 @@ abstract class BaseModel {
       $orm = Manager::getManager();
       $object_repository = $orm->getRepository($many_to_one_class);
 
-      //print $many_to_one_property . "\n\n";
-      //print_r($object_repository);
-      //exit;
+      $object = $object_repository->findBy([$many_to_one_property => $this->$property]);
 
-      $object = $object_repository->findBy($many_to_one_property, $this->$property);
-
-      print 'object';
-      print_r($object);
-      exit;
+      if ($object) {
+        $this->$property = $object;
+      }
     }
 
     // Return the value of the field.
