@@ -119,7 +119,7 @@ class BaseRepository {
     foreach ($criteria as $property => $value) {
       $qb->where($property, $value, '=');
     }
-    $qb->orderBy('ID', 'ASC')
+    return $qb->orderBy('ID', 'ASC')
       ->buildQuery()
       ->getResults();
   }
