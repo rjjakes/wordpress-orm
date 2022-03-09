@@ -205,8 +205,8 @@ You can create a query though this repository like so:
 
 ```php
 $query = $repository->createQueryBuilder()
-  ->where('id', 3, '=')
-  ->orderBy('id', 'ASC')
+  ->where('ID', 3, '=')
+  ->orderBy('ID', 'ASC')
   ->limit(1)
   ->buildQuery();
 ```
@@ -365,7 +365,7 @@ For example:
 ```php
 try {
     $query = $repository->createQueryBuilder()
-      ->where('id', 3, '==')  // Equals operator should be '=' not '=='
+      ->where('ID', 3, '==')  // Equals operator should be '=' not '=='
       ->buildQuery();
 } catch (\Symlink\ORM\Exceptions\InvalidOperatorException $e) {
     // ... warn the user about the bad operator or handle it another way. 
