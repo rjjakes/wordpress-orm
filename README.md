@@ -44,7 +44,7 @@ Example:
 
 namespace App\Models;
 
-use Symlink\ORM\BaseModel as Model;
+use Symlink\ORM\Models\BaseModel as Model;
 
 /**
  * @ORM_Type Entity
