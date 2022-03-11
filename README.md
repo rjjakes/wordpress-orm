@@ -271,12 +271,12 @@ $results = Manager::getManager()
             ->findAll();
 ```
  
-Return all objects matching property name and value: 
+Return all objects matching pairs of property name and value: 
 
 ```php
 $results = Manager::getManager()
             ->getRepository(Product::class)
-            ->findBy($property_name, $value);
+            ->findBy([$property_name_1 => $value_1, $property_name_2 => $value_2]);
 ```
  
 To add more repository query functions, you can subclass the `BaseRepository` class and tell your object to use that
