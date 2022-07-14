@@ -44,7 +44,7 @@ Example:
 
 namespace App\Models;
 
-use Symlink\ORM\BaseModel as Model;
+use Symlink\ORM\Models\BaseModel as Model;
 
 /**
  * @ORM_Type Entity
@@ -205,8 +205,8 @@ You can create a query though this repository like so:
 
 ```php
 $query = $repository->createQueryBuilder()
-  ->where('id', 3, '=')
-  ->orderBy('id', 'ASC')
+  ->where('ID', 3, '=')
+  ->orderBy('ID', 'ASC')
   ->limit(1)
   ->buildQuery();
 ```
@@ -271,12 +271,12 @@ $results = Manager::getManager()
             ->findAll();
 ```
  
-Return all objects matching property name and value: 
+Return all objects matching pairs of property name and value: 
 
 ```php
 $results = Manager::getManager()
             ->getRepository(Product::class)
-            ->findBy($property_name, $value);
+            ->findBy([$property_name_1 => $value_1, $property_name_2 => $value_2]);
 ```
  
 To add more repository query functions, you can subclass the `BaseRepository` class and tell your object to use that
@@ -365,7 +365,7 @@ For example:
 ```php
 try {
     $query = $repository->createQueryBuilder()
-      ->where('id', 3, '==')  // Equals operator should be '=' not '=='
+      ->where('ID', 3, '==')  // Equals operator should be '=' not '=='
       ->buildQuery();
 } catch (\Symlink\ORM\Exceptions\InvalidOperatorException $e) {
     // ... warn the user about the bad operator or handle it another way. 
