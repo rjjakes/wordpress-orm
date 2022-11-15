@@ -16,7 +16,7 @@ abstract class BaseModel {
   /**
    * @var
    */
-  private $hash;
+  protected $hash;
 
   /**
    * BaseModel constructor.
