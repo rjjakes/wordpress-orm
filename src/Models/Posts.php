@@ -3,7 +3,7 @@
 namespace Symlink\ORM\Models;
 
 use Symlink\ORM\Mapping as ORM;
-use Symlink\ORM\Models\BaseModel as Model;
+use Symlink\ORM\Models\IdModel;
 
 /**
  * @ORM_Type Entity
@@ -11,7 +11,7 @@ use Symlink\ORM\Models\BaseModel as Model;
  * @ORM_AllowSchemaUpdate False
  * @ORM_Repository \Symlink\ORM\Repositories\PostsRepository
  */
-class Posts extends Model {
+class Posts extends IdModel {
 
   /**
    * @ORM_Column_Type bigint
