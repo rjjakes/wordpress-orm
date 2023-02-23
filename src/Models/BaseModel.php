@@ -16,7 +16,7 @@ abstract class BaseModel {
   /**
    * @var
    */
-  private $hash;
+  protected $hash;
 
   /**
    * BaseModel constructor.
@@ -26,7 +26,7 @@ abstract class BaseModel {
   }
 
   /**
-   * Performa  manual clone of this object.
+   * Perform a manual clone of this object.
    */
   public function __clone() {
     $class_name = get_class($this);
