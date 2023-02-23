@@ -22,6 +22,12 @@ Getting Doctrine to work with Wordpress was complex and seemed like overkill as 
 There's also: https://github.com/tareq1988/wp-eloquent which is really good, but is more of a query builder for
 existing Wordpress tables.
 
+## Version history
+
+master branch = active development
+
+0.1.0 tag = previous master. The version most people would be using circa last 2022.  
+
 ## Installation
 
 ```
